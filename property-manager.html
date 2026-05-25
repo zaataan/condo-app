@@ -1,0 +1,2058 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Property Manager — จัดการอสังหาริมทรัพย์</title>
+<style>
+:root {
+  --blue:#3b82f6; --blue-lt:#eff6ff;
+  --teal:#0d9488; --teal-lt:#f0fdfa;
+  --green:#16a34a; --green-lt:#f0fdf4;
+  --amber:#d97706; --amber-lt:#fffbeb;
+  --red:#dc2626;   --red-lt:#fef2f2;
+  --purple:#7c3aed; --purple-lt:#f5f3ff;
+  --gray:#1f2937; --gray-lt:#f9fafb;
+  --border:#e5e7eb;
+  --radius:14px; --shadow:0 1px 6px rgba(0,0,0,.08);
+  --sidebar-w:220px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f1f5f9;color:var(--gray);min-height:100vh}
+
+/* ── TOP BAR ── */
+.topbar{
+  position:fixed;top:0;left:0;right:0;height:52px;
+  background:#fff;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:10px;padding:0 14px;z-index:100;
+}
+.topbar-logo{font-size:15px;font-weight:800;color:var(--blue);letter-spacing:-.3px}
+.topbar-sub{font-size:11px;color:#9ca3af;flex:1}
+.prop-selector{
+  display:flex;align-items:center;gap:6px;flex:1;
+  padding:6px 10px;background:var(--gray-lt);border:1.5px solid var(--border);
+  border-radius:10px;cursor:pointer;font-size:13px;font-weight:600;
+  transition:border-color .15s;
+}
+.prop-selector:hover{border-color:var(--blue)}
+.prop-selector select{
+  border:none;background:transparent;font-size:13px;font-weight:600;
+  color:var(--gray);outline:none;cursor:pointer;flex:1
+}
+
+/* ── SIDEBAR ── */
+.sidebar{
+  position:fixed;top:52px;left:0;bottom:0;width:var(--sidebar-w);
+  background:#fff;border-right:1px solid var(--border);
+  overflow-y:auto;z-index:90;padding:10px 0;
+}
+.nav-item{
+  display:flex;align-items:center;gap:8px;padding:9px 14px;
+  font-size:13px;font-weight:500;color:#6b7280;cursor:pointer;
+  border-radius:8px;margin:0 6px;transition:all .15s;
+}
+.nav-item:hover{background:var(--gray-lt);color:var(--gray)}
+.nav-item.active{background:var(--blue-lt);color:var(--blue);font-weight:600}
+.nav-item .ni-icon{font-size:16px;width:20px;text-align:center}
+.nav-sep{height:1px;background:var(--border);margin:6px 10px}
+.nav-group-label{font-size:10px;font-weight:700;color:#9ca3af;padding:6px 20px 2px;text-transform:uppercase;letter-spacing:.5px}
+
+/* ── MAIN ── */
+.main{margin-top:52px;margin-left:var(--sidebar-w);padding:16px;min-height:calc(100vh - 52px)}
+.page{display:none}
+.page.active{display:block}
+
+/* ── CARDS ── */
+.card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:14px;margin-bottom:12px}
+.card-title{font-size:14px;font-weight:700;color:var(--gray);margin-bottom:12px;display:flex;align-items:center;gap:6px}
+
+/* ── KPI ROW ── */
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:12px}
+.kpi{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:12px 14px}
+.kpi .label{font-size:11px;color:#6b7280;font-weight:600;margin-bottom:4px}
+.kpi .number{font-size:20px;font-weight:800;line-height:1.1}
+.kpi .sub{font-size:11px;color:#9ca3af;margin-top:2px}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 13px;border-radius:9px;
+  font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .15s}
+.btn-blue{background:var(--blue);color:#fff}
+.btn-green{background:var(--green);color:#fff}
+.btn-blue:hover{background:#2563eb}
+.btn-teal{background:var(--teal);color:#fff}
+.btn-teal:hover{background:#0f766e}
+.btn-red{background:var(--red-lt);color:var(--red);border:1.5px solid rgba(220,38,38,.25)}
+.btn-red:hover{background:var(--red);color:#fff}
+.btn-ghost{background:var(--gray-lt);color:#6b7280;border:1.5px solid var(--border)}
+.btn-ghost:hover{background:var(--border);color:var(--gray)}
+.btn-sm{padding:5px 10px;font-size:12px}
+.btn-xs{padding:3px 8px;font-size:11px;border-radius:6px}
+.btn-add{width:100%;padding:8px;background:var(--blue-lt);color:var(--blue);
+  border:1.5px dashed rgba(59,130,246,.4);border-radius:9px;
+  font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;margin-top:6px}
+.btn-add:hover{background:var(--blue);color:#fff;border-style:solid}
+
+/* ── FORMS ── */
+.field{display:flex;flex-direction:column;gap:3px}
+.field label{font-size:11px;color:#6b7280;font-weight:600}
+.field input,.field select,.field textarea{
+  padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;
+  font-size:13px;color:var(--gray);outline:none;background:#fff;width:100%
+}
+.field input:focus,.field select:focus{border-color:var(--blue)}
+.field textarea{resize:vertical;min-height:60px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+@media(max-width:380px){.grid3{grid-template-columns:1fr 1fr}}
+
+/* ── ROOMS ── */
+.room-card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);
+  border-left:4px solid var(--border);margin-bottom:10px;overflow:hidden;transition:border-color .2s}
+.room-card.rented{border-left-color:var(--green)}
+.room-hdr{padding:12px 14px;display:flex;align-items:center;gap:8px}
+.room-name{font-size:15px;font-weight:700;flex:1}
+.room-body{padding:0 14px 14px;display:none}
+.room-body.open{display:block}
+.room-toggle-btn{cursor:pointer;background:none;border:none;font-size:14px;color:#9ca3af;padding:2px 4px}
+
+/* ── STATUS BADGE ── */
+.sbadge{display:inline-block;border-radius:20px;font-size:11px;font-weight:700;padding:3px 10px}
+.sbadge-rented{background:var(--green-lt);color:var(--green)}
+.sbadge-vacant{background:var(--gray-lt);color:#9ca3af}
+
+/* ── TOGGLE SWITCH ── */
+.toggle-wrap{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;cursor:pointer}
+.toggle-wrap input[type=checkbox]{
+  appearance:none;width:38px;height:20px;background:#d1d5db;
+  border-radius:10px;cursor:pointer;transition:background .2s;position:relative
+}
+.toggle-wrap input[type=checkbox]:checked{background:var(--green)}
+.toggle-wrap input[type=checkbox]::before{
+  content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;
+  background:#fff;border-radius:50%;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)
+}
+.toggle-wrap input[type=checkbox]:checked::before{left:20px}
+
+/* ── SECTION (collapsible) ── */
+.sec{border:1px solid var(--border);border-radius:12px;margin-bottom:8px;overflow:hidden}
+.sec-hdr{
+  display:flex;align-items:center;gap:6px;padding:10px 12px;cursor:pointer;
+  font-size:13px;font-weight:600;color:#6b7280;background:#fafafa;
+  user-select:none;transition:background .15s
+}
+.sec-hdr:hover{background:var(--gray-lt)}
+.sec-hdr .chev{transition:transform .2s;font-size:11px}
+.sec-hdr .chev.open{transform:rotate(180deg)}
+.sec-body{padding:10px 12px 12px;display:none}
+.sec-body.open{display:block}
+.sec-sum{margin-left:auto;font-size:12px;font-weight:700;padding:2px 8px;border-radius:20px}
+
+/* ── ROW ITEMS ── */
+.xrow{display:flex;gap:6px;align-items:flex-end;margin-bottom:6px}
+.xrow .field{flex:1}
+.xrow-del{
+  flex-shrink:0;width:28px;height:28px;border-radius:7px;border:none;
+  background:var(--red-lt);color:var(--red);font-size:15px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;margin-bottom:1px;
+  transition:all .15s
+}
+.xrow-del:hover{background:var(--red);color:#fff}
+
+/* ── POOL LOAN ── */
+.ploan-row{background:var(--gray-lt);border:1px solid var(--border);border-radius:10px;padding:10px;margin-bottom:8px}
+.ploan-top{display:flex;gap:6px;margin-bottom:8px}
+.ploan-top input{flex:1;padding:7px 9px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;outline:none;background:#fff}
+.ploan-top input:focus{border-color:var(--blue)}
+
+/* ── LOAN CARD ── */
+.loan-card{border:1px solid var(--border);border-radius:12px;margin-bottom:8px;overflow:hidden}
+.loan-hdr{
+  display:flex;align-items:center;gap:8px;padding:10px 12px;cursor:pointer;
+  background:#fafafa;user-select:none;transition:background .15s
+}
+.loan-hdr:hover{background:var(--gray-lt)}
+.loan-hdr-title{font-size:13px;font-weight:700;flex:1}
+.loan-hdr-sub{font-size:11px;color:#9ca3af}
+.loan-remaining-badge{
+  background:var(--amber-lt);color:var(--amber);border-radius:20px;
+  font-size:11px;font-weight:700;padding:2px 8px
+}
+.loan-body{padding:10px 12px;display:none}
+.loan-body.open{display:block}
+.loan-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+@media(max-width:400px){.loan-grid{grid-template-columns:1fr}}
+.loan-progress-bar{height:6px;background:var(--border);border-radius:3px;margin:10px 0 4px;overflow:hidden}
+.loan-progress-fill{height:100%;background:var(--teal);border-radius:3px;transition:width .4s}
+.loan-progress-label{display:flex;justify-content:space-between;font-size:11px;color:#9ca3af}
+.loan-net{
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--amber-lt);border:1px solid rgba(217,119,6,.2);
+  border-radius:8px;padding:8px 10px;margin-top:8px
+}
+.loan-net-lbl{font-size:11px;color:var(--amber);font-weight:600}
+.ln-val{font-size:14px;font-weight:800;color:var(--amber)}
+.loan-field{display:flex;flex-direction:column;gap:3px}
+.loan-field label{font-size:11px;color:#6b7280;font-weight:600}
+.loan-field input{
+  padding:7px 9px;border:1.5px solid var(--border);border-radius:8px;
+  font-size:13px;color:var(--gray);outline:none;background:#fff;width:100%
+}
+.loan-field input:focus{border-color:var(--blue)}
+
+/* ── CASHFLOW TABLE ── */
+.cf-table{width:100%;border-collapse:collapse;font-size:13px}
+.cf-table th{background:#f9fafb;font-size:11px;font-weight:700;color:#9ca3af;padding:8px 10px;text-align:left;border-bottom:2px solid var(--border)}
+.cf-table td{padding:8px 10px;border-bottom:1px solid var(--border)}
+.cf-table tr.total td{font-weight:700;background:#f9fafb}
+.cf-table tr:last-child td{border-bottom:none}
+
+/* ── TAGS / CHIPS ── */
+.tag{display:inline-block;border-radius:20px;font-size:11px;font-weight:700;padding:3px 10px}
+.tag-green{background:var(--green-lt);color:var(--green)}
+.tag-red{background:var(--red-lt);color:var(--red)}
+.tag-amber{background:var(--amber-lt);color:var(--amber)}
+.tag-blue{background:var(--blue-lt);color:var(--blue)}
+.tag-gray{background:var(--gray-lt);color:#9ca3af}
+
+/* ── TENANT ── */
+.tenant-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+
+/* ── EMPTY STATE ── */
+.empty-state{text-align:center;padding:32px 16px;color:#9ca3af}
+.empty-state .es-icon{font-size:36px;margin-bottom:8px}
+.empty-state .es-title{font-size:14px;font-weight:600;margin-bottom:4px;color:#6b7280}
+.empty-state .es-sub{font-size:12px}
+
+/* ── MODAL ── */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;align-items:center;justify-content:center}
+.modal-bg.open{display:flex}
+.modal{background:#fff;border-radius:var(--radius);padding:20px;width:90%;max-width:420px;box-shadow:0 8px 32px rgba(0,0,0,.15)}
+.modal-title{font-size:16px;font-weight:700;margin-bottom:14px}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}
+
+/* ── PROP OVERVIEW ── */
+.prop-empty{text-align:center;padding:60px 16px}
+.prop-empty .big-icon{font-size:56px;margin-bottom:12px}
+.prop-empty p{color:#9ca3af;font-size:14px;margin-bottom:16px}
+
+/* ── RESPONSIVE ── */
+@media(max-width:600px){
+  .sidebar{display:none}
+  .main{margin-left:0}
+  .mobile-nav{display:flex !important}
+}
+.mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;
+  background:#fff;border-top:1px solid var(--border);
+  padding:4px 0 8px;z-index:90;gap:0;justify-content:space-around}
+.mob-nav-item{display:flex;flex-direction:column;align-items:center;gap:1px;
+  padding:4px 10px;cursor:pointer;border-radius:8px;
+  font-size:10px;font-weight:600;color:#9ca3af;transition:color .15s;flex:1;text-align:center}
+.mob-nav-item.active{color:var(--blue)}
+.mob-nav-item .mi{font-size:20px}
+@media(max-width:600px){.main{padding-bottom:64px}}
+
+/* ── DIFF LABEL ── */
+.rent-diff{font-size:11px;font-weight:600;margin-top:2px}
+.diff-pos{color:var(--green)}.diff-neg{color:var(--red)}.diff-zero{color:#9ca3af}
+
+/* ── TOAST ── */
+.toast{
+  position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:#1f2937;color:#fff;border-radius:12px;padding:10px 18px;
+  font-size:13px;font-weight:600;opacity:0;transition:all .3s;z-index:300;white-space:nowrap;
+  pointer-events:none;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media(min-width:601px){.toast{bottom:20px}}
+
+/* ── CONNECTION STATUS ── */
+.conn-dot{
+  display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;
+  padding:4px 10px;border-radius:20px;flex-shrink:0;transition:all .3s;
+}
+.conn-dot.online{background:var(--green-lt);color:var(--green)}
+.conn-dot.offline{background:var(--red-lt);color:var(--red)}
+.conn-dot.syncing{background:var(--amber-lt);color:var(--amber)}
+.conn-dot .dot{width:7px;height:7px;border-radius:50%;background:currentColor}
+@media(max-width:480px){.conn-dot span{display:none}}
+
+/* ── SETUP BANNER ── */
+.setup-banner{
+  background:linear-gradient(135deg,#1e40af,#3b82f6);
+  color:#fff;padding:16px 20px;border-radius:var(--radius);
+  margin-bottom:14px;
+}
+.setup-banner h3{font-size:15px;font-weight:700;margin-bottom:6px}
+.setup-banner p{font-size:13px;opacity:.9;margin-bottom:10px;line-height:1.5}
+.setup-banner code{
+  display:block;background:rgba(0,0,0,.25);border-radius:8px;
+  padding:10px 12px;font-size:12px;font-family:monospace;
+  line-height:1.7;margin-bottom:10px;word-break:break-all;
+}
+.setup-banner .step{
+  display:flex;gap:8px;align-items:flex-start;margin-bottom:6px;font-size:12px;opacity:.9;
+}
+.setup-banner .step-num{
+  background:rgba(255,255,255,.25);border-radius:50%;
+  width:20px;height:20px;display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;flex-shrink:0;
+}
+
+/* ── AUTH SYSTEM ── */
+#auth-overlay{
+  position:fixed;inset:0;z-index:9999;
+  background:linear-gradient(135deg,#1a6fc4 0%,#0d9488 100%);
+  display:flex;align-items:center;justify-content:center;
+}
+.auth-card{
+  background:#fff;border-radius:20px;padding:32px 24px;
+  width:min(340px,92vw);text-align:center;
+  box-shadow:0 20px 60px rgba(0,0,0,.25);
+}
+.auth-screen{display:none}.auth-screen.active{display:block}
+.auth-logo{font-size:48px;margin-bottom:6px}
+.auth-title{font-size:20px;font-weight:800;color:#1a6fc4;margin-bottom:4px}
+.auth-sub{font-size:13px;color:#6b7280;margin-bottom:18px;line-height:1.5}
+.auth-err{font-size:12px;color:#dc2626;margin-top:10px;padding:8px 10px;
+  background:#fee2e2;border-radius:8px;display:none}
+.auth-loading{font-size:13px;color:#9ca3af;margin-top:12px}
+.auth-input{
+  width:100%;padding:11px 14px;border:1.5px solid #e5e7eb;border-radius:10px;
+  font-size:14px;outline:none;margin-bottom:10px;text-align:center;
+  transition:border-color .2s;font-family:inherit;
+}
+.auth-input:focus{border-color:#1a6fc4}
+.auth-btn{
+  width:100%;padding:12px;background:#1a6fc4;color:#fff;border:none;
+  border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;
+  margin-bottom:8px;font-family:inherit;transition:background .2s;
+}
+.auth-btn:hover{background:#155da0}
+.auth-btn.purple{background:#7c3aed}
+.auth-btn.purple:hover{background:#6d28d9}
+.auth-link-btn{
+  background:none;border:none;color:#6b7280;font-size:12px;
+  cursor:pointer;padding:4px 8px;font-family:inherit;
+}
+.auth-link-btn:hover{color:#374151}
+.auth-user-badge{
+  display:flex;align-items:center;gap:8px;background:#f3f4f6;
+  border-radius:10px;padding:8px 12px;margin-bottom:14px;
+  font-size:13px;color:#374151;text-align:left;
+}
+.auth-user-badge img{width:24px;height:24px;border-radius:50%;background:#e5e7eb;flex-shrink:0}
+.auth-divider{display:flex;align-items:center;gap:8px;margin:10px 0;color:#9ca3af;font-size:12px}
+.auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:#e5e7eb}
+.pin-dots{display:flex;gap:12px;justify-content:center;margin:16px 0}
+.pin-dot{width:13px;height:13px;border-radius:50%;background:#e5e7eb;
+  border:2px solid #d1d5db;transition:all .15s}
+.pin-dot.filled{background:#1a6fc4;border-color:#1a6fc4;transform:scale(1.1)}
+.pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.pin-key{
+  padding:13px 8px;background:#f9fafb;border:1.5px solid #e5e7eb;
+  border-radius:10px;font-size:18px;font-weight:700;cursor:pointer;
+  user-select:none;transition:all .1s;color:#374151;font-family:inherit;
+}
+.pin-key:active{background:#e5e7eb;transform:scale(.95)}
+.pin-key.del,.pin-key.cancel{font-size:13px;color:#6b7280;font-weight:500}
+.user-pill{
+  display:flex;align-items:center;gap:6px;cursor:pointer;
+  background:rgba(255,255,255,.18);border-radius:20px;
+  padding:3px 10px 3px 3px;flex-shrink:0;
+}
+.user-avatar{width:26px;height:26px;border-radius:50%;object-fit:cover;background:#e5e7eb}
+.user-name{font-size:12px;font-weight:600;color:#fff;max-width:110px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+</style>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+
+<!-- AUTH OVERLAY -->
+<div id="auth-overlay">
+  <div class="auth-card">
+    <!-- S1: Google Login -->
+    <div id="auth-s1" class="auth-screen active">
+      <div class="auth-logo">🏢</div>
+      <div class="auth-title">Property Manager</div>
+      <div class="auth-sub">ระบบจัดการอสังหาริมทรัพย์<br>ล็อกอินด้วย Google เพื่อเริ่มใช้งาน</div>
+      <div id="g_id_signin" style="display:flex;justify-content:center;min-height:44px"></div>
+      <div class="auth-loading" id="auth-loading">กำลังโหลด...</div>
+    </div>
+    <!-- S2: Profile -->
+    <div id="auth-s2" class="auth-screen">
+      <div class="auth-logo">👤</div>
+      <div class="auth-title">เลือก Profile</div>
+      <div class="auth-user-badge" id="auth-badge">
+        <img id="badge-avatar" src="" alt=""><span id="badge-name"></span>
+      </div>
+      <!-- รายชื่อ profiles -->
+      <div id="pm-profile-list-auth" style="width:100%;display:flex;flex-direction:column;gap:8px;max-height:220px;overflow-y:auto"></div>
+      <div id="pm-no-profile-msg" style="display:none;font-size:13px;color:#9ca3af;text-align:center;padding:6px 0">ยังไม่มี profile — สร้างใหม่เลย</div>
+      <div class="auth-err" id="profile-err"></div>
+      <!-- hidden input เพื่อ backward compat -->
+      <input type="text" id="profile-input" style="display:none" autocomplete="off">
+      <div class="auth-divider">หรือ</div>
+      <button class="auth-btn purple" onclick="showAuthScreen('create')">+ สร้าง Profile ใหม่</button>
+      <button class="auth-link-btn" onclick="pmSignOut()" style="margin-top:8px">ออกจาก Google</button>
+    </div>
+    <!-- S3: PIN -->
+    <div id="auth-s3" class="auth-screen">
+      <div class="auth-logo">🔐</div>
+      <div class="auth-title">ใส่ PIN</div>
+      <div class="auth-sub">profile: <strong id="pin-profile-label"></strong></div>
+      <div class="pin-dots" id="pin-dots">
+        <span class="pin-dot" id="pd0"></span><span class="pin-dot" id="pd1"></span>
+        <span class="pin-dot" id="pd2"></span><span class="pin-dot" id="pd3"></span>
+      </div>
+      <div class="pin-pad" id="pin-pad"></div>
+      <div class="auth-err" id="pin-err"></div>
+      <button class="auth-link-btn" onclick="showAuthScreen('profile')">← เปลี่ยน profile</button>
+    </div>
+    <!-- S4: Create -->
+    <div id="auth-s4" class="auth-screen">
+      <div class="auth-logo">✨</div>
+      <div class="auth-title">สร้าง Profile ใหม่</div>
+      <div class="auth-sub">ข้อมูลแต่ละ profile แยกกันทั้งหมด</div>
+      <input type="text" id="create-name" class="auth-input"
+        placeholder="ชื่อ profile เช่น zaataan" autocomplete="off" spellcheck="false">
+      <input type="password" id="create-pin1" class="auth-input"
+        placeholder="ตั้ง PIN 4 หลัก" maxlength="4" inputmode="numeric" pattern="[0-9]*">
+      <input type="password" id="create-pin2" class="auth-input"
+        placeholder="ยืนยัน PIN" maxlength="4" inputmode="numeric" pattern="[0-9]*">
+      <button class="auth-btn purple" onclick="createProfile()">สร้าง Profile</button>
+      <div class="auth-err" id="create-err"></div>
+      <button class="auth-link-btn" onclick="showAuthScreen('profile')" style="margin-top:8px">← กลับ</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <a href="index.html" class="btn btn-ghost btn-sm" title="กลับหน้าแรก" style="flex-shrink:0;text-decoration:none;font-size:16px;padding:4px 8px">←</a>
+  <div class="topbar-logo">🏢 Property</div>
+  <div class="prop-selector">
+    <span>🏠</span>
+    <select id="prop-select" onchange="switchProperty(this.value)">
+      <option value="">— เลือกอสังหา —</option>
+    </select>
+  </div>
+
+  <button class="btn btn-blue btn-sm" onclick="openAddPropModal()">+ เพิ่ม</button>
+  <button class="btn btn-red btn-sm" onclick="deleteProp()" title="ลบอสังหานี้" style="flex-shrink:0">🗑</button>
+
+  <label class="btn btn-ghost btn-sm" title="Import JSON backup" style="cursor:pointer;flex-shrink:0">
+    📂<input type="file" accept=".json" onchange="importData(event)" style="display:none">
+  </label>
+  <div id="pm-profile-area" style="display:none;position:relative;flex-shrink:0">
+    <div id="pm-profile-chip" onclick="togglePMDropdown()" style="display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.9);border-radius:20px;padding:5px 11px 5px 13px;font-size:12px;font-weight:700;color:#1a3a5c;cursor:pointer;user-select:none;letter-spacing:.3px">
+      👤 <span id="pm-profile-chip-name"></span><span style="font-size:9px;opacity:.5;margin-left:2px">▾</span>
+    </div>
+    <div id="pm-profile-dropdown" style="display:none;position:absolute;top:calc(100% + 8px);right:0;background:#fff;border-radius:14px;box-shadow:0 6px 28px rgba(0,0,0,.18);min-width:180px;z-index:300;overflow:hidden">
+      <div style="padding:6px 8px 4px 12px;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;margin-top:4px">Profiles</div>
+      <div id="pm-profile-list" style="padding:4px 6px"></div>
+      <div style="border-top:1px solid #f3f4f6;padding:6px">
+        <button onclick="document.getElementById('pm-profile-dropdown').style.display='none';load()" style="width:100%;text-align:left;padding:8px 12px;border:none;background:none;color:#3b82f6;font-size:13px;cursor:pointer;border-radius:8px">🔄 โหลดข้อมูลจาก Sheets</button>
+        <button onclick="pmDeleteProfile()" style="width:100%;text-align:left;padding:8px 12px;border:none;background:none;color:#dc2626;font-size:13px;cursor:pointer;border-radius:8px">🗑 ลบ profile นี้</button>
+        <button onclick="pmSignOut()" style="width:100%;text-align:left;padding:8px 12px;border:none;background:none;color:#6b7280;font-size:13px;cursor:pointer;border-radius:8px">↩ ออกจาก Google</button>
+      </div>
+    </div>
+  </div>
+  <div id="pm-user-pill" class="user-pill" style="display:none">
+    <img id="pm-user-avatar" class="user-avatar" src="" alt="">
+  </div>
+  <span id="pm-sync-dot" style="display:none;font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap;margin-left:4px;transition:all .3s"></span>
+</div>
+
+<!-- SIDEBAR -->
+<nav class="sidebar" id="sidebar">
+  <div class="nav-group-label">เมนู</div>
+  <div class="nav-item active" data-page="overview" onclick="navTo('overview',this)">
+    <span class="ni-icon">📊</span>ภาพรวม
+  </div>
+  <div class="nav-item" data-page="rooms" onclick="navTo('rooms',this)">
+    <span class="ni-icon">🛏</span>จัดการห้อง
+  </div>
+  <div class="nav-item" data-page="pool" onclick="navTo('pool',this)">
+    <span class="ni-icon">🏦</span>กองกลาง
+  </div>
+  <div class="nav-item" data-page="cashflow" onclick="navTo('cashflow',this)">
+    <span class="ni-icon">💰</span>Cash Flow
+  </div>
+  <div class="nav-item" data-page="loan" onclick="navTo('loan',this)">
+    <span class="ni-icon">📋</span>แผนการกู้
+  </div>
+</nav>
+
+<!-- MOBILE NAV -->
+<div class="mobile-nav">
+  <div class="mob-nav-item active" data-page="overview" onclick="navTo('overview',this)"><div class="mi">📊</div>ภาพรวม</div>
+  <div class="mob-nav-item" data-page="rooms" onclick="navTo('rooms',this)"><div class="mi">🛏</div>ห้อง</div>
+  <div class="mob-nav-item" data-page="pool" onclick="navTo('pool',this)"><div class="mi">🏦</div>กองกลาง</div>
+  <div class="mob-nav-item" data-page="cashflow" onclick="navTo('cashflow',this)"><div class="mi">💰</div>CF</div>
+  <div class="mob-nav-item" data-page="loan" onclick="navTo('loan',this)"><div class="mi">📋</div>กู้</div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="main">
+
+  <!-- FIREBASE SETUP BANNER -->
+  <div id="firebase-setup-banner" class="main" style="display:none">
+    <div class="setup-banner">
+      <h3>🔥 ตั้งค่า Firebase เพื่อ Sync ข้ามอุปกรณ์</h3>
+      <p>ทำตาม 3 ขั้นตอนนี้ครั้งเดียว แล้วข้อมูลจะ sync ทุก device อัตโนมัติ</p>
+      <div class="step"><div class="step-num">1</div><div>ไปที่ <strong>console.firebase.google.com</strong> → สร้าง Project ใหม่ (ฟรี)</div></div>
+      <div class="step"><div class="step-num">2</div><div>เปิด <strong>Realtime Database</strong> → สร้าง database → เลือก "Start in test mode"</div></div>
+      <div class="step"><div class="step-num">3</div><div>ไปที่ Project Settings → เพิ่ม Web App → copy config มาวางในไฟล์ HTML ตรงที่ระบุไว้</div></div>
+      <p style="margin-top:8px;margin-bottom:6px">แก้ไขในไฟล์ property-manager.html บรรทัด <strong>FIREBASE_CONFIG</strong>:</p>
+      <code>const FIREBASE_CONFIG = {
+  apiKey: "AIza...",
+  authDomain: "your-project.firebaseapp.com",
+  databaseURL: "https://your-project-default-rtdb.firebaseio.com",
+  projectId: "your-project-id",
+  storageBucket: "your-project.appspot.com",
+  messagingSenderId: "123456789",
+  appId: "1:123...:web:abc..."
+};</code>
+      <p style="opacity:.75;font-size:12px">เมื่อกรอกข้อมูลแล้ว รีเฟรชหน้านี้</p>
+    </div>
+  </div>
+
+  <!-- NO PROPERTY STATE -->
+  <div id="no-prop" class="prop-empty">
+    <div class="big-icon">🏢</div>
+    <p>ยังไม่มีอสังหาริมทรัพย์<br>กด <strong>+ เพิ่ม</strong> เพื่อเริ่มต้น</p>
+    <button class="btn btn-blue" onclick="openAddPropModal()">+ เพิ่มอสังหาแรก</button>
+  </div>
+
+  <!-- OVERVIEW PAGE -->
+  <div id="page-overview" class="page" style="display:none">
+    <div id="overview-content"></div>
+  </div>
+
+  <!-- ROOMS PAGE -->
+  <div id="page-rooms" class="page" style="display:none">
+    <div class="card">
+      <div class="card-title">🛏 จัดการห้องเช่า
+        <button class="btn btn-blue btn-sm" style="margin-left:auto" onclick="openAddRoomModal()">+ เพิ่มห้อง</button>
+      </div>
+      <div id="rooms-list"></div>
+    </div>
+  </div>
+
+  <!-- POOL PAGE -->
+  <div id="page-pool" class="page" style="display:none">
+    <div id="pool-content"></div>
+  </div>
+
+  <!-- CASHFLOW PAGE -->
+  <div id="page-cashflow" class="page" style="display:none">
+    <div class="card">
+      <div class="card-title">💰 สรุป Cash Flow รายเดือน</div>
+      <div style="overflow-x:auto">
+        <table class="cf-table" id="cf-table">
+          <thead>
+            <tr>
+              <th>ห้อง</th><th>สถานะ</th><th>รายได้เช่า</th><th>ผ่อนแบงค์</th><th>รายจ่ายอื่น</th><th>Net</th>
+            </tr>
+          </thead>
+          <tbody id="cf-tbody"></tbody>
+          <tfoot id="cf-tfoot"></tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOAN PAGE -->
+  <div id="page-loan" class="page" style="display:none">
+    <div class="card">
+      <div class="card-title">📋 แผนการกู้ (รายห้อง)</div>
+      <div id="loan-cards"></div>
+    </div>
+    <div class="card" id="loan-summary-card">
+      <div class="card-title">📊 สรุปภาระหนี้</div>
+      <div id="loan-summary"></div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<!-- ADD PROPERTY MODAL -->
+<div class="modal-bg" id="modal-add-prop">
+  <div class="modal">
+    <div class="modal-title">🏢 เพิ่มอสังหาริมทรัพย์</div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div class="field">
+        <label>ชื่อ Project <span style="color:var(--red)">*</span></label>
+        <input type="text" id="new-prop-project" placeholder="เช่น The Base, Supalai, Life">
+      </div>
+      <div class="grid2">
+        <div class="field">
+          <label>ชื่ออสังหา</label>
+          <input type="text" id="new-prop-propname" placeholder="เช่น เชิงทะเล, พระราม 9">
+        </div>
+        <div class="field">
+          <label>ชื่อคอนโด / สาขา</label>
+          <input type="text" id="new-prop-condo" placeholder="เช่น ภูเก็ต, ลาดพร้าว">
+        </div>
+      </div>
+      <div class="field">
+        <label>โน้ต (ไม่บังคับ)</label>
+        <input type="text" id="new-prop-note" placeholder="รายละเอียดเพิ่มเติม">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-add-prop')">ยกเลิก</button>
+      <button class="btn btn-blue" onclick="confirmAddProp()">เพิ่ม</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD ROOM MODAL -->
+<div class="modal-bg" id="modal-add-room">
+  <div class="modal">
+    <div class="modal-title">🛏 เพิ่มห้องเช่า</div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div class="field">
+        <label>เลขห้อง / ชื่อห้อง</label>
+        <input type="text" id="new-room-name" placeholder="เช่น 203, A1, 1001">
+      </div>
+      <div class="grid2">
+        <div class="field">
+          <label>ค่าเช่าเป้าหมาย (บาท/เดือน)</label>
+          <input type="number" id="new-room-target" placeholder="0" min="0" step="500">
+        </div>
+        <div class="field">
+          <label>ค่าผ่อนแบงค์ (บาท/เดือน)</label>
+          <input type="number" id="new-room-mortgage" placeholder="0" min="0" step="100">
+        </div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-add-room')">ยกเลิก</button>
+      <button class="btn btn-blue" onclick="confirmAddRoom()">เพิ่มห้อง</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════
+   STATE
+   ═══════════════════════════════════════════════════════ */
+const APP_KEY = 'propmanager_v1';
+
+/*
+  app = {
+    props: [{ id, name, note, rooms:[], pool:{inc:[],exp:[],loans:[]}, loans:{} }],
+    currentId: string|null
+  }
+  room = { id, name, target, mortgage, rented, rent,
+           inc:[{desc,amt}], exp:[{desc,amt}],
+           tenant:{name,phone,movein,expiry,deposit},
+           loan:{bank,pct,amount,rate,monthly,remaining,startDate,paidInstallments} }
+*/
+
+let app = { props: [], currentId: null };
+
+function prop() {
+  return app.props.find(p => p.id === app.currentId) || null;
+}
+
+function mkId() {
+  return '_' + Math.random().toString(36).slice(2,9);
+}
+
+function mkRoom(name='', target=0, mortgage=0) {
+  return {
+    id: mkId(), name, target, mortgage,
+    rented: false, rent: '',
+    inc: [], exp: [{desc:'ค่าส่วนกลาง', amt:''}],
+    tenant: {name:'', phone:'', movein:'', expiry:'', deposit:''},
+    loan: {bank:'', pct:'', amount:'', rate:'', monthly:'',
+           remaining:'', startDate:'', paidInstallments:0}
+  };
+}
+
+function mkProp(project='', propName='', condoName='', note='') {
+  const name = [project, propName, condoName].filter(Boolean).join(' · ');
+  return { id: mkId(), name, project, propName, condoName, note, rooms: [], pool: {inc:[], exp:[], loans:[]} };
+}
+
+function propDisplayName(p) {
+  // Show parts separately if available, fallback to name
+  if(p.project) {
+    const parts = [p.project, p.propName, p.condoName].filter(Boolean);
+    return parts.join(' · ');
+  }
+  return p.name || '(ไม่มีชื่อ)';
+}
+
+/* ═══════════════════════════════════════════════════════
+   GOOGLE SHEETS CONFIG
+   ═══════════════════════════════════════════════════════ */
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz7rnVZdNS_kRn5FABOuSeh9b3KgtdWaJOZHXxVF-p7dsncEn0XS_OUjtSQWWTKHJEx/exec';
+const SHEETS_PATH = 'propmanager';
+
+/* ═══════════════════════════════════════════════════════
+   PERSIST (localStorage + Google Sheets)
+   ═══════════════════════════════════════════════════════ */
+let saveTimer = null;
+let _pmSyncFadeTimer = null;
+
+function setPMSyncStatus(status) {
+  const el = document.getElementById('pm-sync-dot');
+  if(!el) return;
+  clearTimeout(_pmSyncFadeTimer);
+  const map = {
+    loading: { text:'🔄 กำลังโหลด...', color:'#d97706', bg:'#fffbeb' },
+    saving:  { text:'🔄 กำลังบันทึก...', color:'#d97706', bg:'#fffbeb' },
+    synced:  { text:'✓ Synced', color:'#16a34a', bg:'#f0fdf4' },
+    error:   { text:'✗ sync ล้มเหลว — เปิด DevTools ดู Console', color:'#dc2626', bg:'#fef2f2' },
+    nodata:  { text:'☁ ยังไม่มีข้อมูลบน Sheets', color:'#6b7280', bg:'#f9fafb' },
+    local:   { text:'💾 local only', color:'#9ca3af', bg:'#f1f5f9' },
+  };
+  const s = map[status];
+  if(!s) { el.style.display='none'; return; }
+  Object.assign(el.style, { display:'inline-block', color:s.color, background:s.bg });
+  el.textContent = s.text;
+  if(status === 'synced') _pmSyncFadeTimer = setTimeout(() => { el.style.display='none'; }, 3500);
+}
+
+function migrateApp(saved) {
+  (saved.props||[]).forEach(p => {
+    (p.rooms||[]).forEach(r => {
+      if(!r.inc) r.inc = [];
+      if(!r.exp) r.exp = [{desc:'ค่าส่วนกลาง',amt:''}];
+      if(!r.tenant) r.tenant = {name:'',phone:'',movein:'',expiry:'',deposit:''};
+      if(!r.loan) r.loan = {bank:'',pct:'',amount:'',rate:'',monthly:'',remaining:'',startDate:'',paidInstallments:0};
+    });
+    if(!p.pool) p.pool = {inc:[],exp:[],loans:[]};
+  });
+  return saved;
+}
+
+function applyAndRender(data) {
+  app = migrateApp(data);
+  try { localStorage.setItem(pmProfileKey(), JSON.stringify(app)); } catch(e){}
+  renderPropSelector();
+  const hasCurrent = app.currentId && app.props.find(p=>p.id===app.currentId);
+  const hasAny = app.props.length > 0;
+  document.getElementById('no-prop').style.display = (!hasAny) ? 'block' : 'none';
+  if(hasCurrent) {
+    switchProperty(app.currentId);
+  } else if(hasAny) {
+    app.currentId = app.props[0].id;
+    switchProperty(app.currentId);
+  }
+}
+
+function save() {
+  try { localStorage.setItem(pmProfileKey(), JSON.stringify(app)); } catch(e){}
+  if(!SCRIPT_URL) { setPMSyncStatus('local'); return; }
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    setPMSyncStatus('saving');
+    const payload = Object.assign({ path: pmProfilePath() }, app);
+    fetch(SCRIPT_URL, { method:'POST', mode:'no-cors', body: JSON.stringify(payload) })
+      .then(() => setPMSyncStatus('synced'))
+      .catch(e => { console.error('[PM Sync] save error:', e); setPMSyncStatus('error'); });
+  }, 800);
+}
+
+function load() {
+  // โหลดจาก localStorage ก่อน (เร็ว)
+  try {
+    const raw = localStorage.getItem(pmProfileKey());
+    if(raw) { app = migrateApp(JSON.parse(raw)); }
+  } catch(e) {}
+
+  if(!SCRIPT_URL) { setPMSyncStatus('local'); return; }
+  setPMSyncStatus('loading');
+
+  // ดึงจาก path ปัจจุบัน (propmanager_profileName)
+  fetch(SCRIPT_URL + '?path=' + pmProfilePath())
+    .then(r => r.json())
+    .then(d => {
+      if(d && d.props) {
+        applyAndRender(d);
+        setPMSyncStatus('synced');
+      } else {
+        // ไม่เจอ — ลอง migrate จาก path เดิม (propmanager)
+        console.log('[PM Sync] ไม่เจอข้อมูลที่', pmProfilePath(), '— ลอง migrate จาก', SHEETS_PATH);
+        return fetch(SCRIPT_URL + '?path=' + SHEETS_PATH)
+          .then(r2 => r2.json())
+          .then(d2 => {
+            if(d2 && d2.props) {
+              console.log('[PM Sync] migrate สำเร็จ — บันทึกไปที่ path ใหม่');
+              applyAndRender(d2);
+              save(); // บันทึก migrate ไปที่ path ใหม่
+              setPMSyncStatus('synced');
+            } else {
+              console.log('[PM Sync] ยังไม่มีข้อมูลบน Sheets เลย');
+              setPMSyncStatus('nodata');
+            }
+          });
+      }
+    })
+    .catch(e => {
+      console.error('[PM Sync] load error:', e);
+      setPMSyncStatus('error');
+    });
+}
+
+/* ═══════════════════════════════════════════════════════
+   NAV
+   ═══════════════════════════════════════════════════════ */
+let currentPage = 'overview';
+
+function navTo(page, el) {
+  currentPage = page;
+  document.querySelectorAll('.nav-item,.mob-nav-item').forEach(e => e.classList.remove('active'));
+  document.querySelectorAll(`[data-page="${page}"]`).forEach(e => e.classList.add('active'));
+  document.querySelectorAll('.page').forEach(p => p.style.display='none');
+  const pageEl = document.getElementById('page-'+page);
+  if(pageEl) pageEl.style.display = 'block';
+  renderCurrentPage();
+}
+
+function renderCurrentPage() {
+  const p = prop();
+  if(!p) return;
+  if(currentPage === 'overview')  renderOverview();
+  if(currentPage === 'rooms')     renderRooms();
+  if(currentPage === 'pool')      renderPool();
+  if(currentPage === 'cashflow')  renderCashflow();
+  if(currentPage === 'loan')      renderLoan();
+}
+
+/* ═══════════════════════════════════════════════════════
+   PROPERTY MANAGEMENT
+   ═══════════════════════════════════════════════════════ */
+function renderPropSelector() {
+  const sel = document.getElementById('prop-select');
+  sel.innerHTML = '<option value="">— เลือกอสังหา —</option>';
+  app.props.forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = p.id;
+    opt.textContent = propDisplayName(p);
+    if(p.id === app.currentId) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+
+function switchProperty(id) {
+  app.currentId = id || null;
+  save();
+  const hasProps = app.props.length > 0;
+  const hasCurrent = !!id;
+  document.getElementById('no-prop').style.display = (!hasProps||!hasCurrent) ? 'block' : 'none';
+  document.querySelectorAll('.page').forEach(p => p.style.display='none');
+  if(hasCurrent) {
+    const page = document.getElementById('page-'+currentPage);
+    if(page) page.style.display = 'block';
+    renderCurrentPage();
+  }
+}
+
+function deleteProp() {
+  const p = prop(); if(!p) { alert('กรุณาเลือกอสังหาก่อน'); return; }
+  if(!confirm(`⚠️ ลบ "${propDisplayName(p)}" ออกใช่มั้ย?\n\nข้อมูลห้องและรายรับรายจ่ายทั้งหมดจะหายไป`)) return;
+  if(!confirm(`ยืนยันอีกครั้ง — ลบ "${propDisplayName(p)}" จริงๆ ใช่มั้ย?`)) return;
+  app.props = app.props.filter(x => x.id !== p.id);
+  app.currentId = app.props.length > 0 ? app.props[0].id : null;
+  save();
+  renderPropSelector();
+  switchProperty(app.currentId || '');
+}
+
+function openAddPropModal() {
+  document.getElementById('new-prop-project').value = '';
+  document.getElementById('new-prop-propname').value = '';
+  document.getElementById('new-prop-condo').value = '';
+  document.getElementById('new-prop-note').value = '';
+  document.getElementById('modal-add-prop').classList.add('open');
+  setTimeout(()=>document.getElementById('new-prop-project').focus(),100);
+}
+
+function confirmAddProp() {
+  const project   = document.getElementById('new-prop-project').value.trim();
+  if(!project) { document.getElementById('new-prop-project').focus(); return; }
+  const propName  = document.getElementById('new-prop-propname').value.trim();
+  const condoName = document.getElementById('new-prop-condo').value.trim();
+  const note      = document.getElementById('new-prop-note').value.trim();
+  const p = mkProp(project, propName, condoName, note);
+  app.props.push(p);
+  app.currentId = p.id;
+  save();
+  closeModal('modal-add-prop');
+  renderPropSelector();
+  switchProperty(p.id);
+}
+
+/* ═══════════════════════════════════════════════════════
+   ROOM MANAGEMENT
+   ═══════════════════════════════════════════════════════ */
+function openAddRoomModal() {
+  document.getElementById('new-room-name').value = '';
+  document.getElementById('new-room-target').value = '';
+  document.getElementById('new-room-mortgage').value = '';
+  document.getElementById('modal-add-room').classList.add('open');
+  setTimeout(()=>document.getElementById('new-room-name').focus(),100);
+}
+
+function confirmAddRoom() {
+  const p = prop(); if(!p) return;
+  const name = document.getElementById('new-room-name').value.trim();
+  if(!name) { document.getElementById('new-room-name').focus(); return; }
+  const target   = parseFloat(document.getElementById('new-room-target').value)||0;
+  const mortgage = parseFloat(document.getElementById('new-room-mortgage').value)||0;
+  p.rooms.push(mkRoom(name, target, mortgage));
+  save();
+  closeModal('modal-add-room');
+  renderCurrentPage();
+}
+
+function deleteRoom(rid) {
+  const p = prop(); if(!p) return;
+  const r = p.rooms.find(r=>r.id===rid);
+  if(!confirm(`ลบห้อง "${r?.name||rid}" ออกใช่มั้ย?`)) return;
+  p.rooms = p.rooms.filter(r=>r.id!==rid);
+  save();
+  renderCurrentPage();
+}
+
+/* ═══════════════════════════════════════════════════════
+   HELPERS
+   ═══════════════════════════════════════════════════════ */
+function fmt(n) { return (Math.round(n)||0).toLocaleString('th-TH'); }
+
+function monthsElapsed(dateStr) {
+  if(!dateStr) return 0;
+  const s=new Date(dateStr), now=new Date();
+  return Math.max(0,(now.getFullYear()-s.getFullYear())*12+(now.getMonth()-s.getMonth()));
+}
+
+function calcLoanRem(ln) {
+  const P=parseFloat(ln.amount)||0;
+  const r=(parseFloat(ln.rate)||0)/12/100;
+  const M=parseFloat(ln.monthly)||0;
+  const n=parseInt(ln.paidInstallments)||0;
+  if(P<=0||n<=0) return P;
+  if(r===0) return Math.max(0,P-M*n);
+  const f=Math.pow(1+r,n);
+  return Math.max(0,Math.round(P*f-M*(f-1)/r));
+}
+
+function expiryTag(expiry) {
+  if(!expiry) return '';
+  const days = Math.round((new Date(expiry)-new Date())/86400000);
+  if(days<0)       return `<span class="tag tag-red">⚠️ หมดสัญญาแล้ว ${Math.abs(days)} วัน</span>`;
+  if(days<=30)     return `<span class="tag tag-red">⚠️ หมดสัญญาใน ${days} วัน</span>`;
+  if(days<=90)     return `<span class="tag tag-amber">⏰ หมดสัญญาใน ${days} วัน</span>`;
+  return `<span class="tag tag-green">✓ เหลือ ${days} วัน</span>`;
+}
+
+/* ═══════════════════════════════════════════════════════
+   MODAL HELPERS
+   ═══════════════════════════════════════════════════════ */
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+document.querySelectorAll('.modal-bg').forEach(bg => {
+  bg.addEventListener('click', e => { if(e.target===bg) bg.classList.remove('open'); });
+});
+
+/* ═══════════════════════════════════════════════════════
+   OVERVIEW PAGE
+   ═══════════════════════════════════════════════════════ */
+function renderOverview() {
+  const p = prop(); if(!p) return;
+  const rooms = p.rooms;
+  let totalRent=0, rentedCount=0, totalMort=0, totalNet=0, totalDeposit=0;
+  rooms.forEach(r => {
+    const rent = r.rented ? (parseFloat(r.rent)||0) : 0;
+    const mort = parseFloat(r.mortgage)||0;
+    const inc  = r.inc.reduce((s,x)=>s+(parseFloat(x.amt)||0),0);
+    const exp  = r.exp.reduce((s,x)=>s+(parseFloat(x.amt)||0),0);
+    const net  = r.rented ? rent+inc-mort-exp : -mort;
+    if(r.rented) { rentedCount++; totalRent+=rent; }
+    totalMort  += mort;
+    totalNet   += net;
+    totalDeposit += parseFloat(r.tenant?.deposit||0)||0;
+  });
+  const occ = rooms.length > 0 ? Math.round(rentedCount/rooms.length*100) : 0;
+
+  const el = document.getElementById('overview-content');
+  el.innerHTML = `
+    <div class="kpi-row">
+      <div class="kpi">
+        <div class="label">รายได้เช่า/เดือน</div>
+        <div class="number" style="color:var(--green)">${totalRent>0?fmt(totalRent):'—'}</div>
+        <div class="sub">${rentedCount}/${rooms.length} ห้องเช่าอยู่</div>
+      </div>
+      <div class="kpi">
+        <div class="label">ผ่อนแบงค์รวม</div>
+        <div class="number" style="color:var(--amber)">${fmt(totalMort)}</div>
+        <div class="sub">บาท/เดือน</div>
+      </div>
+      <div class="kpi">
+        <div class="label">Net Cash Flow</div>
+        <div class="number" style="color:${totalNet>=0?'var(--green)':'var(--red)'}">${(totalNet>=0?'+':'')+fmt(totalNet)}</div>
+        <div class="sub">บาท/เดือน</div>
+      </div>
+      ${totalDeposit>0?`<div class="kpi"><div class="label">มัดจำรวม</div><div class="number" style="color:var(--teal)">${fmt(totalDeposit)}</div><div class="sub">บาท</div></div>`:''}
+    </div>
+    <div class="card">
+      <div style="font-size:13px;font-weight:600;margin-bottom:8px;color:#6b7280">อัตราการเช่า (Occupancy) ${occ}%</div>
+      <div style="height:10px;background:var(--border);border-radius:5px;overflow:hidden">
+        <div style="width:${occ}%;height:100%;background:var(--green);border-radius:5px;transition:width .4s"></div>
+      </div>
+    </div>
+    ${rooms.length===0 ? `<div class="card"><div class="empty-state"><div class="es-icon">🛏</div><div class="es-title">ยังไม่มีห้องเช่า</div><div class="es-sub">ไปที่ "จัดการห้อง" เพื่อเพิ่มห้องแรก</div></div></div>` : ''}
+    ${rooms.length>0 ? `
+    <div class="card">
+      <div class="card-title">สรุปรายห้อง</div>
+      ${rooms.map(r => {
+        const rent = r.rented ? (parseFloat(r.rent)||0) : 0;
+        const mort = parseFloat(r.mortgage)||0;
+        const net  = r.rented ? rent-mort : -mort;
+        return `<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)">
+          <span style="font-weight:700;min-width:48px">${r.name}</span>
+          <span class="sbadge ${r.rented?'sbadge-rented':'sbadge-vacant'}">${r.rented?'มีคนเช่า':'ว่าง'}</span>
+          ${r.rented&&rent>0?`<span style="font-size:12px;color:var(--green)">+${fmt(rent)}</span>`:''}
+          ${mort>0?`<span style="font-size:12px;color:var(--amber)">ผ่อน ${fmt(mort)}</span>`:''}
+          <span style="margin-left:auto;font-size:12px;font-weight:700;color:${net>=0?'var(--green)':'var(--red)'}">${(net>=0?'+':'')+fmt(net)} ฿</span>
+        </div>`;
+      }).join('')}
+    </div>` : ''}
+  `;
+}
+
+/* ═══════════════════════════════════════════════════════
+   ROOMS PAGE
+   ═══════════════════════════════════════════════════════ */
+function renderRooms() {
+  const p = prop(); if(!p) return;
+  const el = document.getElementById('rooms-list');
+  if(p.rooms.length === 0) {
+    el.innerHTML = `<div class="empty-state"><div class="es-icon">🛏</div><div class="es-title">ยังไม่มีห้อง</div><div class="es-sub">กด "+ เพิ่มห้อง" เพื่อเริ่มต้น</div></div>`;
+    return;
+  }
+  el.innerHTML = p.rooms.map(r => roomCard(r)).join('');
+}
+
+function roomCard(r) {
+  const rid = r.id;
+  const incTotal = r.inc.reduce((s,x)=>s+(parseFloat(x.amt)||0),0);
+  const expTotal = r.exp.reduce((s,x)=>s+(parseFloat(x.amt)||0),0);
+  const rent = r.rented ? (parseFloat(r.rent)||0) : 0;
+  const mort = parseFloat(r.mortgage)||0;
+  const net  = r.rented ? rent+incTotal-mort-expTotal : -mort;
+
+  return `
+  <div class="room-card ${r.rented?'rented':''}" id="rcard-${rid}">
+    <div class="room-hdr">
+      <span class="room-name">ห้อง ${r.name}</span>
+      <span class="sbadge ${r.rented?'sbadge-rented':'sbadge-vacant'}" id="rbadge-${rid}">${r.rented?'มีคนเช่า':'ว่าง'}</span>
+      ${net!==0?`<span style="font-size:12px;font-weight:700;color:${net>=0?'var(--green)':'var(--red)'}">${(net>=0?'+':'')+fmt(net)} ฿</span>`:''}
+      <button class="room-toggle-btn" onclick="toggleRoomBody('${rid}')">▼</button>
+    </div>
+    <div class="room-body" id="rbody-${rid}">
+      <!-- Toggle rented -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <label class="toggle-wrap">
+          <input type="checkbox" id="rtoggle-${rid}" ${r.rented?'checked':''} onchange="toggleRented('${rid}')">
+          <span>${r.rented?'มีคนเช่า':'ว่าง'}</span>
+        </label>
+        <button class="btn btn-red btn-xs" onclick="deleteRoom('${rid}')">🗑 ลบห้อง</button>
+      </div>
+
+      <!-- Rent input -->
+      <div class="grid2" style="margin-bottom:12px">
+        <div class="field">
+          <label>ค่าเช่า (บาท/เดือน)</label>
+          <input type="number" id="rrent-${rid}" value="${r.rent}" placeholder="${r.target||'0'}"
+            oninput="roomUpdate('${rid}','rent',this.value)" min="0" step="500">
+        </div>
+        <div class="field">
+          <label>ค่าผ่อน (บาท/เดือน)</label>
+          <input type="number" id="rmortgage-${rid}" value="${r.mortgage}" placeholder="0"
+            oninput="roomUpdate('${rid}','mortgage',this.value)" min="0" step="100">
+        </div>
+      </div>
+      <div id="rdiff-${rid}" class="rent-diff" style="margin-bottom:8px"></div>
+
+      <!-- Income section -->
+      <div class="sec">
+        <div class="sec-hdr" onclick="toggleSec('inc-${rid}')">
+          <span class="chev" id="chev-inc-${rid}">▲</span>
+          <span>💚 รายได้เพิ่มเติม</span>
+          <span class="sec-sum tag-green tag" id="sum-inc-${rid}"></span>
+        </div>
+        <div class="sec-body open" id="sec-inc-${rid}">
+          <div id="rows-inc-${rid}"></div>
+          <button class="btn-add" onclick="addRow('${rid}','inc')">+ เพิ่มรายการรายได้</button>
+        </div>
+      </div>
+
+      <!-- Expense section -->
+      <div class="sec">
+        <div class="sec-hdr" onclick="toggleSec('exp-${rid}')">
+          <span class="chev" id="chev-exp-${rid}">▲</span>
+          <span>🔴 รายจ่าย</span>
+          <span class="sec-sum tag-red tag" id="sum-exp-${rid}"></span>
+        </div>
+        <div class="sec-body open" id="sec-exp-${rid}">
+          <div id="rows-exp-${rid}"></div>
+          <button class="btn-add" onclick="addRow('${rid}','exp')">+ เพิ่มรายการรายจ่าย</button>
+        </div>
+      </div>
+
+      <!-- Tenant section -->
+      <div class="sec">
+        <div class="sec-hdr" onclick="toggleSec('ten-${rid}')">
+          <span class="chev" id="chev-ten-${rid}">▲</span>
+          <span>👤 ผู้เช่าและสัญญา</span>
+          <span class="sec-sum tag-blue tag" id="sum-ten-${rid}"></span>
+        </div>
+        <div class="sec-body open" id="sec-ten-${rid}">
+          <div class="tenant-grid">
+            <div class="field"><label>ชื่อผู้เช่า</label>
+              <input type="text" value="${r.tenant.name}" placeholder="ชื่อ-นามสกุล"
+                oninput="tenantUpdate('${rid}','name',this.value)"></div>
+            <div class="field"><label>เบอร์โทร</label>
+              <input type="tel" value="${r.tenant.phone}" placeholder="08x-xxx-xxxx"
+                oninput="tenantUpdate('${rid}','phone',this.value)"></div>
+            <div class="field"><label>วันเข้าอยู่</label>
+              <input type="date" value="${r.tenant.movein}"
+                oninput="tenantUpdate('${rid}','movein',this.value)"></div>
+            <div class="field"><label>วันหมดสัญญา</label>
+              <input type="date" value="${r.tenant.expiry}"
+                oninput="tenantUpdate('${rid}','expiry',this.value)"></div>
+            <div class="field" style="grid-column:1/-1"><label>เงินมัดจำ (บาท)</label>
+              <input type="number" value="${r.tenant.deposit}" placeholder="0" min="0" step="500"
+                oninput="tenantUpdate('${rid}','deposit',this.value)"></div>
+          </div>
+          <div style="margin-top:8px">${expiryTag(r.tenant.expiry)}</div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function toggleRoomBody(rid) {
+  const body = document.getElementById('rbody-'+rid);
+  if(!body) return;
+  body.classList.toggle('open');
+  // Update the toggle button icon
+  const btn = body.previousElementSibling?.querySelector('.room-toggle-btn');
+  if(btn) btn.textContent = body.classList.contains('open') ? '▲' : '▼';
+  if(body.classList.contains('open')) {
+    renderRowsFor(rid);
+    renderDiff(rid);
+  }
+}
+
+function toggleSec(secId) {
+  const body = document.getElementById('sec-'+secId);
+  const chev = document.getElementById('chev-'+secId);
+  if(!body) return;
+  body.classList.toggle('open');
+  if(chev) chev.classList.toggle('open', body.classList.contains('open'));
+}
+
+function renderRowsFor(rid) {
+  const p = prop(); if(!p) return;
+  const r = p.rooms.find(r=>r.id===rid); if(!r) return;
+  ['inc','exp'].forEach(type => {
+    const el = document.getElementById(`rows-${type}-${rid}`);
+    if(!el) return;
+    const arr = type==='inc' ? r.inc : r.exp;
+    el.innerHTML = arr.map((row,i) => `
+      <div class="xrow">
+        <div class="field">
+          <label>รายละเอียด</label>
+          <input type="text" value="${row.desc||''}" placeholder="รายการ..."
+            oninput="rowUpdate('${rid}','${type}',${i},'desc',this.value)">
+        </div>
+        <div class="field" style="max-width:120px">
+          <label>จำนวน (บาท)</label>
+          <input type="number" value="${row.amt||''}" placeholder="0" min="0"
+            oninput="rowUpdate('${rid}','${type}',${i},'amt',this.value)">
+        </div>
+        <button class="xrow-del" onclick="delRow('${rid}','${type}',${i})">×</button>
+      </div>`).join('');
+    // Update summary
+    const total = arr.reduce((s,x)=>s+(parseFloat(x.amt)||0),0);
+    const sumEl = document.getElementById(`sum-${type}-${rid}`);
+    if(sumEl) sumEl.textContent = total > 0 ? fmt(total)+' ฿' : '';
+  });
+}
+
+function addRow(rid, type) {
+  const p = prop(); if(!p) return;
+  const r = p.rooms.find(r=>r.id===rid); if(!r) return;
+  const arr = type==='inc' ? r.inc : r.exp;
+  arr.push({desc:'', amt:''});
+  save();
+  renderRowsFor(rid);
+}
+
+function delRow(rid, type, idx) {
+  if(!confirm('ลบรายการนี้ใช่มั้ย?')) return;
+  const p = prop(); if(!p) return;
+  const r = p.rooms.find(r=>r.id===rid); if(!r) return;
+  const arr = type==='inc' ? r.inc : r.exp;
+  arr.splice(idx,1);
+  save();
+  renderRowsFor(rid);
+  renderOverviewIfActive();
+}
+
+function rowUpdate(rid, type, idx, field, val) {
+  const p = prop(); if(!p) return;
+  const r = p.rooms.find(r=>r.id===rid); if(!r) return;
+  const arr = type==='inc' ? r.inc : r.exp;
+  if(arr[idx]) arr[idx][field] = val;
+  save();
+  // update summary only, don't re-render rows
+  const total = arr.reduce((s,x)=>s+(parseFloat(x.amt)||0),0);
+  const sumEl = document.getElementById(`sum-${type}-${rid}`);
+  if(sumEl) sumEl.textContent = total > 0 ? fmt(total)+' ฿' : '';
+  renderDiff(rid);
+  renderOverviewIfActive();
+}
+
+function toggleRented(rid) {
+  const p = prop(); if(!p) return;
+  const r = p.rooms.find(r=>r.id===rid); if(!r) return;
+  const isRented = document.getElementById('rtoggle-'+rid).checked;
+  r.rented = isRented;
+  if(isRented && !r.rent) {
+    r.rent = r.target;
+    const rentEl = document.getElementById('rrent-'+rid);
+    if(rentEl) rentEl.value = r.target;
+  }
+  // Update badge label
+  const lbl = document.querySelector(`#rtoggle-${rid} + span`);
+  if(lbl) lbl.textContent = isRented ? 'มีคนเช่า' : 'ว่าง';
+  const badge = document.getElementById('rbadge-'+rid);
+  if(badge) { badge.textContent = isRented?'มีคนเช่า':'ว่าง'; badge.className='sbadge '+(isRented?'sbadge-rented':'sbadge-vacant'); }
+  const card = document.getElementById('rcard-'+rid);
+  if(card) { if(isRented) card.classList.add('rented'); else card.classList.remove('rented'); }
+  save();
+  renderDiff(rid);
+  renderOverviewIfActive();
+}
+
+function roomUpdate(rid, field, val) {
+  const p = prop(); if(!p) return;
+  const r = p.rooms.find(r=>r.id===rid); if(!r) return;
+  r[field] = field==='rented' ? val : val;
+  if(field==='rent'||field==='mortgage') r[field] = val;
+  save();
+  renderDiff(rid);
+  renderOverviewIfActive();
+}
+
+function renderDiff(rid) {
+  const p = prop(); if(!p) return;
+  const r = p.rooms.find(r=>r.id===rid); if(!r) return;
+  const el = document.getElementById('rdiff-'+rid);
+  if(!el) return;
+  const rent = parseFloat(r.rent)||0;
+  if(!r.rented||rent===0) { el.textContent=''; return; }
+  const d = rent - (r.target||0);
+  if(d>0) { el.textContent='+'+fmt(d)+' จากที่ตั้งไว้'; el.className='rent-diff diff-pos'; }
+  else if(d<0) { el.textContent=fmt(d)+' จากที่ตั้งไว้'; el.className='rent-diff diff-neg'; }
+  else { el.textContent='ตรงตามที่ตั้งไว้'; el.className='rent-diff diff-zero'; }
+}
+
+function tenantUpdate(rid, field, val) {
+  const p = prop(); if(!p) return;
+  const r = p.rooms.find(r=>r.id===rid); if(!r) return;
+  r.tenant[field] = val;
+  save();
+  // Update expiry tag in-place
+  if(field==='expiry') {
+    const secBody = document.getElementById('sec-ten-'+rid);
+    if(secBody) {
+      const tagEl = secBody.querySelector('div[style="margin-top:8px"]');
+      if(tagEl) tagEl.innerHTML = expiryTag(val);
+    }
+  }
+  // Update tenant summary
+  const sumEl = document.getElementById('sum-ten-'+rid);
+  if(sumEl) sumEl.textContent = r.tenant.name || '';
+  renderOverviewIfActive();
+}
+
+function renderOverviewIfActive() {
+  if(currentPage==='overview') renderOverview();
+  if(currentPage==='cashflow') renderCashflow();
+}
+
+/* ═══════════════════════════════════════════════════════
+   POOL PAGE
+   ═══════════════════════════════════════════════════════ */
+function renderPool() {
+  const p = prop(); if(!p) return;
+  const pool = p.pool;
+  const incTotal = (pool.inc||[]).reduce((s,x)=>s+(parseFloat(x.amt)||0),0);
+  const expTotal = (pool.exp||[]).reduce((s,x)=>s+(parseFloat(x.amt)||0),0);
+  const loanTotal= (pool.loans||[]).reduce((s,ln)=>s+Math.max(0,(parseFloat(ln.amount)||0)-(parseFloat(ln.paid)||0)),0);
+  const balance  = incTotal - expTotal;
+
+  const el = document.getElementById('pool-content');
+  el.innerHTML = `
+    <div class="kpi-row">
+      <div class="kpi"><div class="label">ยอดรวมเข้า</div>
+        <div class="number" style="color:var(--green)">${fmt(incTotal)}</div><div class="sub">บาท</div></div>
+      <div class="kpi"><div class="label">ยอดรวมออก</div>
+        <div class="number" style="color:var(--red)">${fmt(expTotal)}</div><div class="sub">บาท</div></div>
+      <div class="kpi"><div class="label">ยอดคงเหลือ</div>
+        <div class="number" style="color:${balance>=0?'var(--teal)':'var(--red)'}">${(balance>=0?'+':'')+fmt(balance)}</div><div class="sub">บาท</div></div>
+      ${loanTotal>0?`<div class="kpi"><div class="label">หนี้ภายนอกรวม</div><div class="number" style="color:var(--amber)">${fmt(loanTotal)}</div><div class="sub">บาท</div></div>`:''}
+    </div>
+    <div class="card">
+      <div class="card-title">💚 รายรับกองกลาง</div>
+      <div id="pool-inc-rows">
+        ${(pool.inc||[]).map((r,i)=>poolRowHtml('inc',i,r)).join('')}
+      </div>
+      <button class="btn-add" onclick="addPoolRow('inc')">+ เพิ่มรายรับ</button>
+    </div>
+    <div class="card">
+      <div class="card-title">🔴 รายจ่ายกองกลาง</div>
+      <div id="pool-exp-rows">
+        ${(pool.exp||[]).map((r,i)=>poolRowHtml('exp',i,r)).join('')}
+      </div>
+      <button class="btn-add" onclick="addPoolRow('exp')">+ เพิ่มรายจ่าย</button>
+    </div>
+    <div class="card">
+      <div class="card-title">🏦 เงินกู้ยืมภายนอก</div>
+      <div id="pool-loan-rows">
+        ${(pool.loans||[]).map((ln,i)=>poolLoanHtml(i,ln)).join('')}
+      </div>
+      <button class="btn-add" onclick="addPoolLoan()">+ เพิ่มรายการกู้ยืม</button>
+    </div>
+  `;
+}
+
+function poolRowHtml(type, i, r) {
+  return `<div class="xrow">
+    <div class="field"><label>รายละเอียด</label>
+      <input type="text" value="${r.desc||''}" placeholder="รายการ..."
+        oninput="poolRowUpdate('${type}',${i},'desc',this.value)"></div>
+    <div class="field" style="max-width:130px"><label>จำนวน (บาท)</label>
+      <input type="number" value="${r.amt||''}" placeholder="0" min="0"
+        oninput="poolRowUpdate('${type}',${i},'amt',this.value)"></div>
+    <button class="xrow-del" onclick="delPoolRow('${type}',${i})">×</button>
+  </div>`;
+}
+
+function poolLoanHtml(i, ln) {
+  const amt   = parseFloat(ln.amount)||0;
+  const paid  = parseFloat(ln.paid)||0;
+  const rem   = Math.max(0, amt - paid);
+  const rate  = parseFloat(ln.rate)||0;
+  const moInt = Math.round(rem * rate / 12 / 100);
+  const pct   = amt>0 ? Math.min(100,Math.round((1-rem/amt)*100)) : 0;
+  return `<div class="ploan-row" id="ploan-${i}">
+    <div class="ploan-top">
+      <input type="text" id="pli-src-${i}" placeholder="แหล่งที่มา (เช่น พ่อ, ธนาคาร...)"
+        value="${(ln.source||'').replace(/"/g,'&quot;')}"
+        oninput="poolLoanUpdate(${i},'source',this.value)">
+      <button class="xrow-del" onclick="delPoolLoan(${i})">×</button>
+    </div>
+    <div class="grid3">
+      <div class="field"><label>ยืม (บาท)</label>
+        <input type="number" id="pli-amt-${i}" placeholder="0" step="any" min="0" value="${ln.amount||''}"
+          oninput="poolLoanUpdate(${i},'amount',this.value)"></div>
+      <div class="field"><label>คืนแล้ว (บาท)</label>
+        <input type="number" id="pli-paid-${i}" placeholder="0" step="any" min="0" value="${ln.paid||''}"
+          oninput="poolLoanUpdate(${i},'paid',this.value)"></div>
+      <div class="field"><label>ดอกเบี้ย (%/ปี)</label>
+        <input type="number" id="pli-rate-${i}" placeholder="0" step="0.01" min="0" value="${ln.rate||''}"
+          oninput="poolLoanUpdate(${i},'rate',this.value)"></div>
+    </div>
+    <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+      <div style="flex:1;min-width:130px;background:#fff;border-radius:8px;padding:8px 10px;border:1px solid var(--border)">
+        <div style="font-size:10px;color:#6b7280;font-weight:600;margin-bottom:2px">หนี้คงเหลือ</div>
+        <div id="plbal-${i}" style="font-size:14px;font-weight:800;color:var(--amber)">${fmt(rem)} บาท</div>
+        <div id="plprog-${i}" style="margin-top:4px">${amt>0?`<div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden"><div style="width:${pct}%;height:100%;background:var(--green);border-radius:2px"></div></div><div style="font-size:10px;color:#9ca3af;margin-top:2px">คืนไปแล้ว ${pct}%</div>`:''}</div>
+      </div>
+      <div id="plint-box-${i}" style="flex:1;min-width:130px;background:${rate>0?'var(--amber-lt)':'#fff'};border-radius:8px;padding:8px 10px;border:1px solid ${rate>0?'rgba(217,119,6,.3)':'var(--border)'}">
+        <div style="font-size:10px;color:#6b7280;font-weight:600;margin-bottom:2px">ดอกเบี้ย/เดือน (ลดต้นลดดอก)</div>
+        <div id="plint-${i}" style="font-size:14px;font-weight:800;color:${rate>0?'var(--amber)':'#9ca3af'}">${rate>0?fmt(moInt)+' บาท':'ยังไม่ระบุ'}</div>
+        <div id="plint-fml-${i}" style="font-size:10px;color:#9ca3af;margin-top:2px">${rate>0&&rem>0?fmt(rem)+' × '+rate+'% ÷ 12':''}</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function updatePoolLoanDisplay(i) {
+  const p = prop(); if(!p) return;
+  const pool = p.pool;
+  const ln = (pool.loans||[])[i]; if(!ln) return;
+  const amt   = parseFloat(ln.amount)||0;
+  const paid  = parseFloat(ln.paid)||0;
+  const rem   = Math.max(0, amt - paid);
+  const rate  = parseFloat(ln.rate)||0;
+  const moInt = Math.round(rem * rate / 12 / 100);
+  const pct   = amt>0 ? Math.min(100,Math.round((1-rem/amt)*100)) : 0;
+
+  const q = id => document.getElementById(id);
+  const ae = document.activeElement;
+  if(q('plbal-'+i)) q('plbal-'+i).textContent = fmt(rem)+' บาท';
+  if(q('plprog-'+i)) q('plprog-'+i).innerHTML = amt>0
+    ? `<div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden"><div style="width:${pct}%;height:100%;background:var(--green);border-radius:2px"></div></div><div style="font-size:10px;color:#9ca3af;margin-top:2px">คืนไปแล้ว ${pct}%</div>`
+    : '';
+  if(q('plint-box-'+i)) {
+    q('plint-box-'+i).style.background = rate>0?'var(--amber-lt)':'#fff';
+    q('plint-box-'+i).style.borderColor = rate>0?'rgba(217,119,6,.3)':'var(--border)';
+  }
+  if(q('plint-'+i)) { q('plint-'+i).textContent = rate>0?fmt(moInt)+' บาท':'ยังไม่ระบุ'; q('plint-'+i).style.color = rate>0?'var(--amber)':'#9ca3af'; }
+  if(q('plint-fml-'+i)) q('plint-fml-'+i).textContent = (rate>0&&rem>0)?fmt(rem)+' × '+rate+'% ÷ 12':'';
+  // Input fields — only if not focused
+  const fi = [[`pli-src-${i}`,ln.source],[`pli-amt-${i}`,ln.amount],[`pli-paid-${i}`,ln.paid],[`pli-rate-${i}`,ln.rate]];
+  fi.forEach(([id,val])=>{ const el=q(id); if(el&&ae!==el) el.value=val||''; });
+}
+
+function addPoolRow(type) {
+  const p = prop(); if(!p) return;
+  const arr = type==='inc' ? p.pool.inc : p.pool.exp;
+  arr.push({desc:'', amt:''});
+  save();
+  renderPool();
+}
+
+function delPoolRow(type, i) {
+  if(!confirm('ลบรายการนี้ใช่มั้ย?')) return;
+  const p = prop(); if(!p) return;
+  const arr = type==='inc' ? p.pool.inc : p.pool.exp;
+  arr.splice(i,1);
+  save();
+  renderPool();
+}
+
+function poolRowUpdate(type, i, field, val) {
+  const p = prop(); if(!p) return;
+  const arr = type==='inc' ? p.pool.inc : p.pool.exp;
+  if(arr[i]) arr[i][field] = val;
+  save();
+}
+
+function addPoolLoan() {
+  const p = prop(); if(!p) return;
+  if(!p.pool.loans) p.pool.loans = [];
+  p.pool.loans.push({source:'', amount:'', paid:'', rate:''});
+  save();
+  renderPool();
+}
+
+function delPoolLoan(i) {
+  if(!confirm('ลบรายการกู้ยืมนี้ใช่มั้ย?')) return;
+  const p = prop(); if(!p) return;
+  p.pool.loans.splice(i,1);
+  save();
+  renderPool();
+}
+
+function poolLoanUpdate(i, field, val) {
+  const p = prop(); if(!p) return;
+  if(p.pool.loans&&p.pool.loans[i]!=null) p.pool.loans[i][field]=val;
+  save();
+  updatePoolLoanDisplay(i);
+}
+
+/* ═══════════════════════════════════════════════════════
+   CASHFLOW PAGE
+   ═══════════════════════════════════════════════════════ */
+function renderCashflow() {
+  const p = prop(); if(!p) return;
+  const rooms = p.rooms;
+  let totalRent=0, totalMort=0, totalExp=0, totalNet=0;
+  const tbody = document.getElementById('cf-tbody');
+  const tfoot = document.getElementById('cf-tfoot');
+  if(!tbody||!tfoot) return;
+
+  tbody.innerHTML = rooms.map(r => {
+    const rent = r.rented ? (parseFloat(r.rent)||0) : 0;
+    const mort = parseFloat(r.mortgage)||0;
+    const incT = r.inc.reduce((s,x)=>s+(parseFloat(x.amt)||0),0);
+    const expT = r.exp.reduce((s,x)=>s+(parseFloat(x.amt)||0),0);
+    const net  = r.rented ? rent+incT-mort-expT : -mort;
+    totalRent += rent; totalMort += mort; totalExp += expT; totalNet += net;
+    return `<tr>
+      <td>${r.name}</td>
+      <td>${r.rented?'<span style="color:var(--green);font-weight:600">มีคนเช่า</span>':'<span style="color:var(--red)">ว่าง</span>'}</td>
+      <td>${rent>0?fmt(rent):'—'}</td>
+      <td>${mort>0?fmt(mort):'—'}</td>
+      <td>${expT>0?fmt(expT):'—'}</td>
+      <td style="font-weight:700;color:${net>=0?'var(--green)':'var(--red)'}">${(net>=0?'+':'')+fmt(net)}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="6" style="text-align:center;color:#9ca3af;padding:20px">ยังไม่มีห้อง</td></tr>';
+
+  tfoot.innerHTML = `<tr class="total">
+    <td>รวม</td><td></td>
+    <td style="color:var(--green)">${totalRent>0?fmt(totalRent):'—'}</td>
+    <td style="color:var(--amber)">${totalMort>0?fmt(totalMort):'—'}</td>
+    <td>${totalExp>0?fmt(totalExp):'—'}</td>
+    <td style="color:${totalNet>=0?'var(--green)':'var(--red)'}">${(totalNet>=0?'+':'')+fmt(totalNet)}</td>
+  </tr>`;
+}
+
+/* ═══════════════════════════════════════════════════════
+   LOAN PAGE
+   ═══════════════════════════════════════════════════════ */
+function renderLoan() {
+  const p = prop(); if(!p) return;
+  const el = document.getElementById('loan-cards');
+  if(!el) return;
+
+  if(p.rooms.length===0) {
+    el.innerHTML = '<div class="empty-state"><div class="es-icon">📋</div><div class="es-title">ยังไม่มีห้อง</div><div class="es-sub">เพิ่มห้องก่อนเพื่อจัดการแผนกู้</div></div>';
+    return;
+  }
+
+  el.innerHTML = p.rooms.map(r => {
+    const ln = r.loan;
+    const rem = parseFloat(ln.remaining)||0;
+    const amt = parseFloat(ln.amount)||0;
+    const pct = amt>0 ? Math.min(100,Math.max(0,Math.round((1-rem/amt)*100))) : 0;
+    const mo  = parseFloat(ln.monthly)||0;
+    const pi  = parseInt(ln.paidInstallments)||0;
+    const rid = r.id;
+    return `
+    <div class="loan-card" id="lcard-${rid}">
+      <div class="loan-hdr" onclick="toggleLoanCard('${rid}')">
+        <span class="loan-hdr-title">ห้อง ${r.name}</span>
+        ${ln.bank?`<span class="loan-hdr-sub">${ln.bank}</span>`:''}
+        ${rem>0?`<span class="loan-remaining-badge" id="lbadge-${rid}">เหลือ ${fmt(rem)} ฿</span>`:`<span id="lbadge-${rid}"></span>`}
+        <span style="color:#9ca3af;font-size:12px" id="lchev-${rid}">▼</span>
+      </div>
+      <div class="loan-body" id="lbody-${rid}">
+        ${mo>0?`<div style="font-size:11px;color:#9ca3af;margin-bottom:8px" id="lhsub-${rid}">${ln.pct||'—'}% | ${ln.rate||'—'}%/ปี | ผ่อน ${fmt(mo)} ฿/เดือน${pi>0?' | ผ่อนไปแล้ว '+pi+' งวด':''}</div>`:`<div style="font-size:11px;color:#9ca3af;margin-bottom:8px" id="lhsub-${rid}"></div>`}
+        <div class="loan-grid">
+          <div class="loan-field"><label>ธนาคาร</label>
+            <input type="text" value="${ln.bank||''}" placeholder="BBL, SCB..."
+              oninput="loanUpdate('${rid}','bank',this.value)"></div>
+          <div class="loan-field"><label>LTV (%)</label>
+            <input type="number" value="${ln.pct||''}" placeholder="80"
+              oninput="loanUpdate('${rid}','pct',this.value)"></div>
+          <div class="loan-field"><label>วงเงินกู้ (บาท)</label>
+            <input type="number" step="1" min="0" value="${ln.amount||''}"
+              oninput="loanUpdate('${rid}','amount',this.value)"></div>
+          <div class="loan-field"><label>ดอกเบี้ย (%/ปี)</label>
+            <input type="number" step="0.01" min="0" value="${ln.rate||''}"
+              oninput="loanUpdate('${rid}','rate',this.value)"></div>
+          <div class="loan-field"><label>ผ่อน/เดือน (บาท)</label>
+            <input type="number" step="1" min="0" value="${ln.monthly||''}"
+              oninput="loanUpdate('${rid}','monthly',this.value)"></div>
+          <div class="loan-field"><label>วันเริ่มต้นผ่อน</label>
+            <input type="date" value="${ln.startDate||''}"
+              oninput="loanUpdate('${rid}','startDate',this.value)"></div>
+          <div class="loan-field"><label>ผ่อนไปแล้ว (งวด)</label>
+            <input type="number" step="1" min="0" id="linput-pi-${rid}" value="${pi}"
+              oninput="loanUpdate('${rid}','paidInstallments',this.value)"></div>
+          <div class="loan-field"><label>หนี้คงเหลือ (คำนวณ) <span style="color:var(--amber)">✦</span></label>
+            <input type="number" step="1" min="0" id="linput-rem-${rid}" value="${Math.round(rem)||''}"
+              oninput="loanUpdate('${rid}','remaining',this.value)"
+              style="color:var(--amber);border-color:rgba(217,119,6,.4);background:#fffbeb"></div>
+        </div>
+        ${amt>0?`
+        <div class="loan-progress-bar">
+          <div class="loan-progress-fill" id="lprog-${rid}" style="width:${pct}%"></div>
+        </div>
+        <div class="loan-progress-label" id="lprogl-${rid}">
+          <span>ผ่อนไปแล้ว ${pi} งวด (${pct}%)</span>
+          <span>คงเหลือ ${fmt(rem)} / ${fmt(amt)} บาท</span>
+        </div>`:'<div id="lprog-${rid}"></div><div id="lprogl-${rid}"></div>'}
+        ${rem>0?`
+        <div class="loan-net">
+          <span class="loan-net-lbl">หนี้คงเหลือ</span>
+          <span class="ln-val" id="lnetval-${rid}">${fmt(rem)} บาท</span>
+        </div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+
+  renderLoanSummary();
+}
+
+function toggleLoanCard(rid) {
+  const body = document.getElementById('lbody-'+rid);
+  const chev = document.getElementById('lchev-'+rid);
+  if(!body) return;
+  body.classList.toggle('open');
+  if(chev) chev.textContent = body.classList.contains('open') ? '▲' : '▼';
+}
+
+function loanUpdate(rid, field, val) {
+  const p = prop(); if(!p) return;
+  const r = p.rooms.find(r=>r.id===rid); if(!r) return;
+  r.loan[field] = field==='paidInstallments' ? (parseInt(val)||0) : val;
+  if(field==='startDate') r.loan.paidInstallments = monthsElapsed(val);
+  if(field!=='remaining') r.loan.remaining = calcLoanRem(r.loan);
+  // Sync monthly → mortgage
+  if(field==='monthly') { r.mortgage = parseFloat(val)||0; }
+  save();
+  updateLoanDisplay(rid);
+}
+
+function updateLoanDisplay(rid) {
+  const p = prop(); if(!p) return;
+  const r = p.rooms.find(r=>r.id===rid); if(!r) return;
+  const ln = r.loan;
+  const rem = parseFloat(ln.remaining)||0;
+  const amt = parseFloat(ln.amount)||0;
+  const pct = amt>0 ? Math.min(100,Math.max(0,Math.round((1-rem/amt)*100))) : 0;
+  const mo  = parseFloat(ln.monthly)||0;
+  const pi  = parseInt(ln.paidInstallments)||0;
+  const f   = n => fmt(n);
+  const q   = id => document.getElementById(id);
+  const ae  = document.activeElement;
+
+  if(q('lbadge-'+rid)) q('lbadge-'+rid).textContent = rem>0 ? 'เหลือ '+f(rem)+' ฿' : '';
+  if(q('lhsub-'+rid))  q('lhsub-'+rid).textContent  = mo>0 ? `${ln.pct||'—'}% | ${ln.rate||'—'}%/ปี | ผ่อน ${f(mo)} ฿/เดือน${pi>0?' | ผ่อนไปแล้ว '+pi+' งวด':''}` : '';
+  if(q('lprog-'+rid))  q('lprog-'+rid).style.width   = pct+'%';
+  if(q('lprogl-'+rid)) q('lprogl-'+rid).innerHTML    = `<span>ผ่อนไปแล้ว ${pi} งวด (${pct}%)</span><span>คงเหลือ ${f(rem)} / ${f(amt)} บาท</span>`;
+  if(q('lnetval-'+rid)) q('lnetval-'+rid).textContent = f(rem)+' บาท';
+  const remEl = q('linput-rem-'+rid);
+  if(remEl && ae!==remEl) remEl.value = Math.round(rem)||'';
+  const piEl = q('linput-pi-'+rid);
+  if(piEl && ae!==piEl) piEl.value = pi;
+
+  renderLoanSummary();
+}
+
+function renderLoanSummary() {
+  const p = prop(); if(!p) return;
+  const el = document.getElementById('loan-summary');
+  if(!el) return;
+  let totalAmt=0, totalRem=0, totalMo=0;
+  p.rooms.forEach(r => {
+    totalAmt += parseFloat(r.loan.amount)||0;
+    totalRem += parseFloat(r.loan.remaining)||0;
+    totalMo  += parseFloat(r.loan.monthly)||0;
+  });
+  el.innerHTML = `
+    <div class="grid3">
+      <div class="kpi"><div class="label">วงเงินกู้รวม</div><div class="number" style="color:var(--gray)">${fmt(totalAmt)}</div><div class="sub">บาท</div></div>
+      <div class="kpi"><div class="label">หนี้คงเหลือรวม</div><div class="number" style="color:var(--amber)">${fmt(totalRem)}</div><div class="sub">บาท</div></div>
+      <div class="kpi"><div class="label">ผ่อนรวม/เดือน</div><div class="number" style="color:var(--red)">${fmt(totalMo)}</div><div class="sub">บาท</div></div>
+    </div>
+    ${totalAmt>0?`<div style="margin-top:8px">
+      <div style="font-size:11px;color:#6b7280;font-weight:600;margin-bottom:4px">สัดส่วนชำระแล้ว</div>
+      <div style="height:8px;background:var(--border);border-radius:4px;overflow:hidden">
+        <div style="width:${Math.min(100,Math.round((1-totalRem/totalAmt)*100))}%;height:100%;background:var(--teal);border-radius:4px;transition:width .4s"></div>
+      </div>
+      <div style="font-size:11px;color:#9ca3af;margin-top:4px">ชำระแล้ว ${Math.min(100,Math.round((1-totalRem/totalAmt)*100))}%</div>
+    </div>`:''}
+  `;
+}
+
+/* ════════════════════════════════════════════════
+   AUTH + PROFILE SYSTEM — Property Manager
+   ════════════════════════════════════════════════ */
+const PM_CLIENT_ID   = '303747067347-bqbmip2omsais6kd0a3oetj800po6ola.apps.googleusercontent.com';
+const PM_PROFILES_KEY= 'pm_profiles';
+const PM_SESSION_KEY = 'pm_session';
+const PM_UNLOCKS_KEY = 'pm_pin_unlocks'; // cache PIN unlock ต่อ profile (24 ชม.)
+
+let _pmGUser   = null;
+let _pmProfile = null;
+let _pmPinBuf  = '';
+
+function pmParseJwt(t) {
+  try { return JSON.parse(atob(t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))); } catch(e){ return null; }
+}
+function getPMProfiles() {
+  try { return JSON.parse(localStorage.getItem(PM_PROFILES_KEY)||'{}'); } catch(e){ return {}; }
+}
+function savePMProfiles(p) { try { localStorage.setItem(PM_PROFILES_KEY, JSON.stringify(p)); } catch(e){} }
+function getPMUnlocks()  { try { return JSON.parse(localStorage.getItem(PM_UNLOCKS_KEY)||'{}'); } catch(e){ return {}; } }
+function savePMUnlocks(u){ try { localStorage.setItem(PM_UNLOCKS_KEY, JSON.stringify(u)); } catch(e){} }
+function isPMUnlocked(name) { const u=getPMUnlocks(); return u[name] && (Date.now()-u[name]) < 24*60*60*1000; }
+function recordPMUnlock(name){ const u=getPMUnlocks(); u[name]=Date.now(); savePMUnlocks(u); }
+function pmProfileKey() { return 'propmanager_v1_' + (_pmProfile||'default'); }
+function pmProfilePath() { return SHEETS_PATH + '_' + (_pmProfile||'default'); }
+
+function showAuthScreen(name) {
+  const map = {login:'auth-s1', profile:'auth-s2', pin:'auth-s3', create:'auth-s4'};
+  document.querySelectorAll('.auth-screen').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById(map[name]);
+  if(el) el.classList.add('active');
+  if(name==='profile') {
+    document.getElementById('profile-err').style.display = 'none';
+    renderPMProfileListAuth();
+  }
+  if(name==='create') {
+    document.getElementById('create-name').value  = '';
+    document.getElementById('create-pin1').value  = '';
+    document.getElementById('create-pin2').value  = '';
+    document.getElementById('create-err').style.display = 'none';
+    setTimeout(()=>document.getElementById('create-name').focus(),150);
+  }
+}
+
+function onPMGoogleSignIn(response) {
+  const payload = pmParseJwt(response.credential);
+  if(!payload) return;
+  _pmGUser = { email: payload.email, name: payload.name, picture: payload.picture };
+  try { localStorage.setItem('pm_guser', JSON.stringify(_pmGUser)); } catch(e){}
+  goPMProfileScreen();
+}
+
+function goPMProfileScreen() {
+  document.getElementById('badge-name').textContent = _pmGUser.name || _pmGUser.email;
+  if(_pmGUser.picture) document.getElementById('badge-avatar').src = _pmGUser.picture;
+  showAuthScreen('profile');
+}
+
+function renderPMProfileListAuth() {
+  const profiles = getPMProfiles();
+  const names    = Object.keys(profiles);
+  const listEl   = document.getElementById('pm-profile-list-auth');
+  const noMsg    = document.getElementById('pm-no-profile-msg');
+  if(names.length === 0) {
+    listEl.innerHTML = '';
+    noMsg.style.display = 'block';
+  } else {
+    noMsg.style.display = 'none';
+    listEl.innerHTML = names.map(name => {
+      const unlocked = isPMUnlocked(name);
+      return `<button onclick="selectPMProfile('${name}')"
+        style="width:100%;display:flex;align-items:center;gap:12px;
+               padding:11px 14px;border:2px solid #e5e7eb;border-radius:12px;
+               background:#fff;cursor:pointer;font-size:14px;font-weight:600;
+               color:#1f2937;text-align:left"
+        onmouseover="this.style.borderColor='#3b82f6';this.style.background='#eff6ff'"
+        onmouseout="this.style.borderColor='#e5e7eb';this.style.background='#fff'">
+        <span style="width:36px;height:36px;border-radius:50%;background:#dbeafe;
+                     display:flex;align-items:center;justify-content:center;
+                     font-size:15px;font-weight:800;color:#1d4ed8;flex-shrink:0">
+          ${name[0].toUpperCase()}
+        </span>
+        <span>${name}</span>
+        ${unlocked
+          ? '<span style="margin-left:auto;font-size:11px;color:#16a34a;font-weight:600">● พร้อมใช้</span>'
+          : '<span style="margin-left:auto;font-size:16px;opacity:.35">🔒</span>'}
+      </button>`;
+    }).join('');
+  }
+}
+
+function selectPMProfile(name) {
+  _pmProfile = name;
+  if(isPMUnlocked(name)) {
+    savePMSession(); pmLaunchApp();
+  } else {
+    document.getElementById('pin-profile-label').textContent = name;
+    _pmPinBuf = ''; buildPinPad(); updatePinDots();
+    document.getElementById('pin-err').style.display = 'none';
+    showAuthScreen('pin');
+  }
+}
+
+function submitProfile() {
+  const name  = document.getElementById('profile-input').value.trim().toLowerCase();
+  const errEl = document.getElementById('profile-err');
+  if(!name) { document.getElementById('profile-input').focus(); return; }
+  const profiles = getPMProfiles();
+  if(profiles[name]) {
+    _pmProfile = name;
+    // ✅ ถ้า unlock ยังอยู่ภายใน 24 ชม. ข้าม PIN ได้เลย
+    if(isPMUnlocked(name)) {
+      savePMSession(); pmLaunchApp(); return;
+    }
+    document.getElementById('pin-profile-label').textContent = name;
+    _pmPinBuf  = '';
+    buildPinPad();
+    updatePinDots();
+    document.getElementById('pin-err').style.display = 'none';
+    showAuthScreen('pin');
+  } else {
+    errEl.textContent   = '❌ ไม่พบ profile "' + name + '"';
+    errEl.style.display = 'block';
+  }
+}
+
+function createProfile() {
+  const name  = document.getElementById('create-name').value.trim().toLowerCase();
+  const p1    = document.getElementById('create-pin1').value.trim();
+  const p2    = document.getElementById('create-pin2').value.trim();
+  const errEl = document.getElementById('create-err');
+  if(!name)                       { errEl.textContent='กรุณาใส่ชื่อ profile';          errEl.style.display='block'; return; }
+  if(!/^[a-z0-9_]+$/.test(name)) { errEl.textContent='ใช้ได้แค่ a-z 0-9 _';          errEl.style.display='block'; return; }
+  if(!/^\d{4}$/.test(p1))       { errEl.textContent='PIN ต้องเป็นตัวเลข 4 หลัก';   errEl.style.display='block'; return; }
+  if(p1 !== p2)                   { errEl.textContent='PIN ทั้งสองไม่ตรงกัน';         errEl.style.display='block'; return; }
+  const profiles = getPMProfiles();
+  if(profiles[name]) { errEl.textContent='มี profile "'+name+'" อยู่แล้ว'; errEl.style.display='block'; return; }
+  profiles[name] = { pin: p1 };
+  savePMProfiles(profiles);
+  _pmProfile = name;
+  savePMSession();
+  pmLaunchApp();
+}
+
+function buildPinPad() {
+  const buf  = () => _pmPinBuf;
+  const pad  = document.getElementById('pin-pad');
+  const keys = ['1','2','3','4','5','6','7','8','9','del','0','back'];
+  pad.innerHTML = keys.map(k => {
+    if(k==='del')  return `<button class="pin-key del"    onclick="pinKey('del')">⌫</button>`;
+    if(k==='back') return `<button class="pin-key cancel" onclick="showAuthScreen('profile')">เปลี่ยน</button>`;
+    return `<button class="pin-key" onclick="pinKey('${k}')">${k}</button>`;
+  }).join('');
+}
+function updatePinDots() {
+  [0,1,2,3].forEach(i => {
+    const el = document.getElementById('pd'+i);
+    if(el) el.className = 'pin-dot' + (i < _pmPinBuf.length ? ' filled' : '');
+  });
+}
+function pinKey(k) {
+  if(k==='del') { _pmPinBuf = _pmPinBuf.slice(0,-1); updatePinDots(); return; }
+  if(_pmPinBuf.length >= 4) return;
+  _pmPinBuf += k; updatePinDots();
+  if(_pmPinBuf.length === 4) setTimeout(pmVerifyPin, 150);
+}
+function pmVerifyPin() {
+  const profiles = getPMProfiles();
+  if(profiles[_pmProfile] && profiles[_pmProfile].pin === _pmPinBuf) {
+    recordPMUnlock(_pmProfile); // บันทึกเวลา unlock สำหรับ 24 ชม.
+    savePMSession(); pmLaunchApp();
+  } else {
+    _pmPinBuf = ''; updatePinDots();
+    const e = document.getElementById('pin-err');
+    e.textContent = '❌ PIN ไม่ถูกต้อง'; e.style.display = 'block';
+    setTimeout(()=>{ e.style.display='none'; }, 2000);
+  }
+}
+
+function savePMSession() {
+  try {
+    localStorage.setItem(PM_SESSION_KEY, JSON.stringify({
+      googleUser: _pmGUser, profile: _pmProfile,
+      expires: Date.now() + 7*24*60*60*1000
+    }));
+  } catch(e){}
+}
+
+function pmLaunchApp() {
+  window.ACTIVE_PROFILE = _pmProfile;
+  document.getElementById('auth-overlay').style.display   = 'none';
+  document.getElementById('pm-user-pill').style.display      = 'flex';
+  document.getElementById('pm-profile-area').style.display   = 'flex';
+  document.getElementById('pm-profile-chip-name').textContent = _pmProfile;
+  if(_pmGUser?.picture) document.getElementById('pm-user-avatar').src = _pmGUser.picture;
+  load();
+  renderPropSelector();
+  if(app.currentId && app.props.find(p=>p.id===app.currentId)) {
+    document.getElementById('no-prop').style.display = 'none';
+    navTo(currentPage, document.querySelector(`[data-page="${currentPage}"]`));
+  } else if(app.props.length > 0) {
+    app.currentId = app.props[0].id;
+    renderPropSelector();
+    document.getElementById('no-prop').style.display = 'none';
+    navTo(currentPage, document.querySelector(`[data-page="${currentPage}"]`));
+  }
+}
+
+function pmLogoutProfile() {
+  // กลับหน้า profile โดยไม่ต้อง login Google ใหม่
+  try { localStorage.removeItem(PM_SESSION_KEY); } catch(e){}
+  location.reload();
+}
+function pmDeleteProfile() {
+  if(!_pmProfile) return;
+  if(!confirm('ลบ profile "' + _pmProfile + '" ?\n\nข้อมูลทั้งหมดใน profile นี้จะหายถาวร')) return;
+  // ขอ PIN ยืนยัน
+  const pin = prompt('🔐 ใส่ PIN ของ profile "' + _pmProfile + '" เพื่อยืนยันการลบ');
+  if(pin === null) return; // กด Cancel
+  const profiles = getPMProfiles();
+  if(!profiles[_pmProfile] || profiles[_pmProfile].pin !== pin.trim()) {
+    alert('❌ PIN ไม่ถูกต้อง — ยกเลิกการลบ'); return;
+  }
+  // ลบข้อมูลของ profile นี้
+  try { localStorage.removeItem(pmProfileKey()); } catch(e){}
+  // ลบออกจาก profiles list
+  delete profiles[_pmProfile];
+  savePMProfiles(profiles);
+  // ลบออกจาก unlock cache
+  const unlocks = getPMUnlocks();
+  delete unlocks[_pmProfile];
+  savePMUnlocks(unlocks);
+  // ล้าง session แล้ว reload กลับหน้า profile
+  try { localStorage.removeItem(PM_SESSION_KEY); } catch(e){}
+  location.reload();
+}
+function togglePMDropdown() {
+  const dd = document.getElementById('pm-profile-dropdown');
+  if(dd.style.display === 'none') {
+    // สร้างรายชื่อ profiles
+    const profiles = getPMProfiles();
+    const list = document.getElementById('pm-profile-list');
+    const names = Object.keys(profiles);
+    list.innerHTML = names.length ? names.map(name => {
+      const isActive   = name === _pmProfile;
+      const isUnlocked = isPMUnlocked(name);
+      return `<button onclick="pmSwitchToProfile('${name}')"
+        style="width:100%;text-align:left;padding:9px 12px;border:none;
+               background:${isActive?'#eff6ff':'none'};
+               color:${isActive?'#1d4ed8':'#1f2937'};
+               font-size:13px;font-weight:${isActive?'700':'500'};
+               cursor:pointer;border-radius:8px;display:flex;align-items:center;gap:8px">
+        <span style="width:14px">${isActive?'✓':''}</span>
+        ${name}
+        ${isUnlocked && !isActive ? '<span title="ปลดล็อกแล้ว" style="font-size:9px;color:#16a34a;margin-left:auto">● พร้อมใช้</span>' : ''}
+      </button>`;
+    }).join('') : '<div style="padding:10px 12px;font-size:12px;color:#9ca3af">ยังไม่มี profile</div>';
+    dd.style.display = 'block';
+    setTimeout(() => document.addEventListener('click', closePMDropdown), 10);
+  } else {
+    dd.style.display = 'none';
+  }
+}
+function closePMDropdown(e) {
+  const area = document.getElementById('pm-profile-area');
+  if(area && !area.contains(e.target)) {
+    document.getElementById('pm-profile-dropdown').style.display = 'none';
+    document.removeEventListener('click', closePMDropdown);
+  }
+}
+function pmSwitchToProfile(name) {
+  document.getElementById('pm-profile-dropdown').style.display = 'none';
+  document.removeEventListener('click', closePMDropdown);
+  if(name === _pmProfile) return;
+  _pmProfile = name;
+  if(isPMUnlocked(name)) {
+    savePMSession(); pmLaunchApp();
+  } else {
+    // ต้องใส่ PIN
+    try { localStorage.removeItem(PM_SESSION_KEY); } catch(e){}
+    document.getElementById('pm-profile-chip-name').textContent = name;
+    document.getElementById('pin-profile-label').textContent = name;
+    _pmPinBuf = ''; buildPinPad(); updatePinDots();
+    document.getElementById('pin-err').style.display = 'none';
+    document.getElementById('auth-overlay').style.display = 'flex';
+    showAuthScreen('pin');
+  }
+}
+function pmLogoutProfile() {
+  try { localStorage.removeItem(PM_SESSION_KEY); } catch(e){}
+  location.reload();
+}
+function pmSignOut() {
+  // ออกจาก Google ด้วย
+  if(!confirm('ออกจาก Google ด้วยใช่มั้ย?')) return;
+  try { localStorage.removeItem(PM_SESSION_KEY); localStorage.removeItem('pm_guser'); } catch(e){}
+  location.reload();
+}
+
+// ── Init ──
+window.addEventListener('DOMContentLoaded', () => {
+  // profile-input Enter key
+  document.getElementById('profile-input')?.addEventListener('keydown', e => {
+    if(e.key==='Enter') submitProfile();
+  });
+  // Check session
+  try {
+    const sess = JSON.parse(localStorage.getItem(PM_SESSION_KEY)||'{}');
+    if(sess.profile && sess.googleUser && sess.expires > Date.now()) {
+      _pmGUser = sess.googleUser; _pmProfile = sess.profile;
+      pmLaunchApp(); return;
+    }
+  } catch(e){}
+  try {
+    const gu = JSON.parse(localStorage.getItem('pm_guser')||'{}');
+    if(gu.email) { _pmGUser = gu; goPMProfileScreen(); return; }
+  } catch(e){}
+  let _gisRetry = 0;
+  function tryGIS() {
+    if(typeof google !== 'undefined' && google.accounts) {
+      document.getElementById('auth-loading').style.display = 'none';
+      try {
+        google.accounts.id.initialize({ client_id: PM_CLIENT_ID, callback: onPMGoogleSignIn });
+        google.accounts.id.renderButton(document.getElementById('g_id_signin'),
+          { theme:'outline', size:'large', width:270, locale:'th' });
+      } catch(err) {
+        document.getElementById('auth-loading').innerHTML =
+          '⚠️ โหลด Google Sign-In ไม่ได้<br><button onclick="location.reload()" style="margin-top:10px;padding:8px 18px;border-radius:8px;border:none;background:#3b82f6;color:#fff;cursor:pointer;font-size:14px">🔄 ลองใหม่</button>';
+      }
+    } else if(_gisRetry++ < 50) {
+      setTimeout(tryGIS, 300); // รอได้สูงสุด ~15 วิ
+    } else {
+      document.getElementById('auth-loading').innerHTML =
+        '⚠️ โหลด Google Sign-In ไม่ได้<br><small style="color:#9ca3af">ลองตรวจสอบการเชื่อมต่ออินเทอร์เน็ต</small><br><button onclick="location.reload()" style="margin-top:10px;padding:8px 18px;border-radius:8px;border:none;background:#3b82f6;color:#fff;cursor:pointer;font-size:14px">🔄 ลองใหม่</button>';
+    }
+  }
+  tryGIS();
+});
+
+/* ═══════════════════════════════════════════════════════
+   EXPORT / IMPORT
+   ═══════════════════════════════════════════════════════ */
+function showToast(msg) {
+  let t = document.getElementById('pm-toast');
+  if(!t) { t = document.createElement('div'); t.id='pm-toast'; t.className='toast'; document.body.appendChild(t); }
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function exportData() {
+  const dataStr = JSON.stringify(app, null, 2);
+  const blob = new Blob([dataStr], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  const now  = new Date();
+  const stamp = now.getFullYear()+'-'+(now.getMonth()+1).toString().padStart(2,'0')+'-'+now.getDate().toString().padStart(2,'0');
+  a.href     = url;
+  a.download = 'property-manager-' + stamp + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('💾 ดาวน์โหลดสำเร็จ');
+}
+
+function importData(event) {
+  const file = event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const imported = JSON.parse(e.target.result);
+      if(!imported.props) throw new Error('invalid');
+      if(!confirm('นำเข้าข้อมูลนี้จะ **แทนที่** ข้อมูลปัจจุบันทั้งหมด ต้องการดำเนินการต่อใช่มั้ย?')) return;
+      app = imported;
+      save();
+      renderPropSelector();
+      if(app.currentId && app.props.find(p=>p.id===app.currentId)) {
+        switchProperty(app.currentId);
+      } else if(app.props.length>0) {
+        app.currentId = app.props[0].id;
+        switchProperty(app.currentId);
+      }
+      showToast('✅ นำเข้าข้อมูลสำเร็จ');
+    } catch(err) {
+      alert('ไฟล์ไม่ถูกต้อง กรุณาเลือกไฟล์ .json ที่ export จากโปรแกรมนี้');
+    }
+    event.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+// Close modals on Enter in text inputs
+document.addEventListener('keydown', e => {
+  if(e.key==='Enter' && e.target.tagName==='INPUT') {
+    if(document.getElementById('modal-add-prop').classList.contains('open')) confirmAddProp();
+    if(document.getElementById('modal-add-room').classList.contains('open')) confirmAddRoom();
+  }
+  if(e.key==='Escape') {
+    document.querySelectorAll('.modal-bg.open').forEach(m=>m.classList.remove('open'));
+  }
+});
+</script>
+</body>
+</html>

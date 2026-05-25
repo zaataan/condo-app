@@ -1,0 +1,2138 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Base เชิงทะเล — Google Sheets</title>
+<style>
+  :root {
+    color-scheme: light;
+    --blue:    #1a6fc4;
+    --blue-lt: #e8f1fb;
+    --teal:    #0d9488;
+    --teal-lt: #e6f7f5;
+    --amber:   #d97706;
+    --amber-lt:#fef3c7;
+    --red:     #dc2626;
+    --red-lt:  #fee2e2;
+    --green:   #16a34a;
+    --green-lt:#dcfce7;
+    --gray:    #374151;
+    --gray-lt: #f9fafb;
+    --border:  #e5e7eb;
+    --radius:  14px;
+    --shadow:  0 2px 12px rgba(0,0,0,.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #f3f4f6;
+    color: var(--gray);
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+
+  /* CARD */
+  .card {
+    background: #fff;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 14px;
+    margin-bottom: 10px;
+  }
+
+  /* KPI GRID */
+  .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+  .kpi {
+    background: #fff;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 12px;
+    text-align: center;
+  }
+  .kpi .label  { font-size: 11px; color: #6b7280; margin-bottom: 2px; }
+  .kpi .number { font-size: 19px; font-weight: 800; }
+  .kpi .sub    { font-size: 10px; color: #9ca3af; margin-top: 2px; }
+
+  /* ROOM MANAGEMENT CARD */
+  .room-card {
+    background: #fff;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    margin-bottom: 12px;
+    overflow: hidden;
+  }
+  .room-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .room-badge {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--blue);
+  }
+  .room-badge.pet { color: var(--teal); }
+  .room-meta { font-size: 11px; color: #6b7280; margin-top: 1px; }
+
+  /* TOGGLE */
+  .toggle-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .toggle-label { font-size: 12px; font-weight: 600; }
+  .toggle {
+    position: relative;
+    width: 46px;
+    height: 26px;
+    flex-shrink: 0;
+  }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .slider {
+    position: absolute;
+    inset: 0;
+    background: #d1d5db;
+    border-radius: 13px;
+    cursor: pointer;
+    transition: .25s;
+  }
+  .slider:before {
+    content: '';
+    position: absolute;
+    width: 20px; height: 20px;
+    left: 3px; top: 3px;
+    background: #fff;
+    border-radius: 50%;
+    transition: .25s;
+    box-shadow: 0 1px 4px rgba(0,0,0,.2);
+  }
+  input:checked + .slider { background: var(--green); }
+  input:checked + .slider:before { transform: translateX(20px); }
+
+  /* STATUS BADGE */
+  .status-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .status-rented  { background: var(--green-lt); color: var(--green); }
+  .status-vacant  { background: var(--red-lt);   color: var(--red);   }
+
+  /* ROOM BODY */
+  .room-body { padding: 12px 14px; }
+  .field-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .field-label { font-size: 13px; color: #6b7280; }
+  .field-val   { font-size: 14px; font-weight: 600; }
+
+  /* INPUT */
+  .rent-input-wrap { display: flex; align-items: center; gap: 6px; }
+  .rent-input {
+    width: 130px;
+    padding: 6px 10px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--gray);
+    text-align: right;
+    outline: none;
+    transition: border-color .2s;
+  }
+  .rent-input:focus { border-color: var(--blue); }
+  .rent-unit { font-size: 12px; color: #9ca3af; }
+
+  /* DIFF */
+  .rent-diff { font-size: 12px; font-weight: 600; margin-top: 4px; text-align: right; }
+  .diff-pos { color: var(--green); }
+  .diff-neg { color: var(--red); }
+  .diff-zero { color: #9ca3af; }
+
+  /* CASHFLOW MINI */
+  .cf-mini {
+    background: var(--gray-lt);
+    border-radius: 8px;
+    padding: 10px;
+    margin-top: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .cf-mini .cf-label { font-size: 12px; color: #6b7280; }
+  .cf-mini .cf-val   { font-size: 16px; font-weight: 800; }
+
+  /* SUMMARY TABLE */
+  .tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .tbl th { background: var(--blue); color: #fff; padding: 8px 8px; text-align: right; font-weight: 600; font-size: 12px; }
+  .tbl th:first-child { text-align: left; }
+  .tbl td { padding: 8px 8px; text-align: right; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .tbl td:first-child { text-align: left; font-weight: 600; }
+  .tbl tr.total td { background: var(--blue-lt); font-weight: 700; color: var(--blue); border-bottom: none; }
+  .tbl tr:nth-child(even) td { background: var(--gray-lt); }
+
+  /* BIG CASHFLOW */
+  .cf-big {
+    border-radius: var(--radius);
+    padding: 18px 16px;
+    text-align: center;
+    margin-bottom: 10px;
+  }
+  .cf-big .cf-tag   { font-size: 12px; opacity: .85; margin-bottom: 4px; }
+  .cf-big .cf-num   { font-size: 30px; font-weight: 800; }
+  .cf-big .cf-sub   { font-size: 12px; opacity: .75; margin-top: 4px; }
+  .cf-green { background: linear-gradient(135deg, #16a34a, #0d9488); color: #fff; }
+  .cf-red   { background: linear-gradient(135deg, #dc2626, #b91c1c); color: #fff; }
+
+  /* ALERT */
+  .alert {
+    border-radius: var(--radius);
+    padding: 11px 13px;
+    font-size: 13px;
+    margin-bottom: 10px;
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+  }
+  .alert.warn { background: var(--amber-lt); color: #92400e; }
+  .alert.info { background: var(--blue-lt);  color: #1e40af; }
+  .alert .icon { font-size: 15px; flex-shrink: 0; padding-top: 1px; }
+
+  /* SAVE BTN */
+  .save-bar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: #fff;
+    border-top: 1px solid var(--border);
+    padding: 12px 16px;
+    display: flex;
+    gap: 10px;
+    z-index: 200;
+    box-shadow: 0 -4px 12px rgba(0,0,0,.08);
+  }
+  .btn {
+    flex: 1;
+    padding: 12px;
+    border-radius: 10px;
+    border: none;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity .2s;
+  }
+  .btn:active { opacity: .8; }
+  .btn-save   { background: var(--blue); color: #fff; }
+  .btn-reset  { background: var(--gray-lt); color: var(--gray); border: 1px solid var(--border); flex: 0 0 80px; }
+
+  .saved-toast {
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--green);
+    color: #fff;
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    opacity: 0;
+    transition: opacity .3s;
+    z-index: 300;
+    white-space: nowrap;
+  }
+  .saved-toast.show { opacity: 1; }
+
+  .pet-tag {
+    display: inline-block;
+    background: var(--teal-lt);
+    color: var(--teal);
+    border-radius: 10px;
+    padding: 1px 7px;
+    font-size: 10px;
+    font-weight: 600;
+    margin-left: 4px;
+    vertical-align: middle;
+  }
+
+  /* Occupancy bar */
+  .occ-bar-wrap { margin: 6px 0 0; }
+  .occ-bar { height: 6px; background: var(--border); border-radius: 4px; overflow: hidden; }
+  .occ-fill { height: 100%; background: var(--green); border-radius: 4px; transition: width .4s; }
+  .occ-label { font-size: 11px; color: #6b7280; margin-top: 3px; }
+
+  /* ── EXTRAS SECTION ── */
+  .xsec { border-top: 1px solid var(--border); }
+  .xsec-toggle {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 14px; cursor: pointer;
+    font-size: 13px; font-weight: 600; color: var(--blue);
+    user-select: none; transition: background .15s;
+    gap: 8px;
+  }
+  .xsec-toggle:hover { background: var(--blue-lt); }
+  .xsec-toggle .x-left { display: flex; align-items: center; gap: 6px; }
+  .xsec-chevron { font-style: normal; font-size: 12px; transition: transform .2s; display: inline-block; }
+  .xsec-chevron.open { transform: rotate(180deg); }
+  .xsec-summary {
+    font-size: 11px; font-weight: 700;
+    padding: 2px 8px; border-radius: 10px;
+    background: var(--gray-lt); color: #6b7280;
+    white-space: nowrap; flex-shrink: 0;
+  }
+  .xsec-body { padding: 4px 14px 14px; background: #fafafa; display: none; }
+  .xsec-body.open { display: block; }
+  .xgroup { margin-top: 10px; }
+  .xgroup-hdr {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .5px; margin-bottom: 7px;
+  }
+  .xgroup-hdr.inc { color: var(--green); }
+  .xgroup-hdr.exp { color: var(--red); }
+  .xrow {
+    display: flex; align-items: center; gap: 6px; margin-bottom: 6px;
+  }
+  .xrow input[type=text] {
+    flex: 1; padding: 6px 9px;
+    border: 1.5px solid var(--border); border-radius: 8px;
+    font-size: 13px; color: var(--gray); outline: none;
+    background: #fff; min-width: 0;
+  }
+  .xrow input[type=text]:focus { border-color: var(--blue); }
+  .xrow input[type=number] {
+    width: 96px; padding: 6px 8px; text-align: right;
+    border: 1.5px solid var(--border); border-radius: 8px;
+    font-size: 13px; color: var(--gray); outline: none;
+    background: #fff; flex-shrink: 0;
+  }
+  .xrow input[type=number].inc:focus { border-color: var(--green); }
+  .xrow input[type=number].exp:focus { border-color: var(--red); }
+  .xrow-del {
+    width: 26px; height: 26px; border-radius: 50%;
+    border: 1.5px solid var(--border); background: #fff; color: #9ca3af;
+    cursor: pointer; font-size: 15px; line-height: 1;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; transition: all .15s;
+  }
+  .xrow-del:hover { border-color: var(--red); color: var(--red); background: var(--red-lt); }
+  .xbtn-add {
+    font-size: 12px; font-weight: 600;
+    padding: 5px 14px; border-radius: 20px; border: 1.5px dashed;
+    background: transparent; cursor: pointer; transition: background .15s;
+    margin-top: 2px;
+  }
+  .xbtn-add.inc { border-color: var(--green); color: var(--green); }
+  .xbtn-add.inc:hover { background: var(--green-lt); }
+  .xbtn-add.exp { border-color: var(--red); color: var(--red); }
+  .xbtn-add.exp:hover { background: var(--red-lt); }
+  .xsubtotal {
+    text-align: right; font-size: 12px; font-weight: 700;
+    padding-top: 6px; margin-top: 6px;
+    border-top: 1px dashed var(--border);
+  }
+  .xsubtotal.inc { color: var(--green); }
+  .xsubtotal.exp { color: var(--red); }
+  /* Full net row */
+  .cf-full {
+    display: flex; justify-content: space-between; align-items: center;
+    background: #f0fdf4; border-radius: 8px;
+    padding: 10px 14px; margin: 8px 14px 12px;
+    border: 1px solid #bbf7d0;
+  }
+  .cf-full.neg { background: var(--red-lt); border-color: #fecaca; }
+  .cf-full .cf-f-label { font-size: 12px; color: #6b7280; }
+  .cf-full .cf-f-val { font-size: 17px; font-weight: 800; }
+
+  /* ── POOL SECTION ── */
+  .pool-row {
+    display: flex; align-items: center; gap: 6px; margin-bottom: 6px;
+  }
+  .pool-row input[type=date] {
+    width: 118px; padding: 6px 8px;
+    border: 1.5px solid var(--border); border-radius: 8px;
+    font-size: 12px; color: var(--gray); outline: none; background: #fff; flex-shrink: 0;
+  }
+  .pool-row input[type=text] {
+    flex: 1; padding: 6px 9px;
+    border: 1.5px solid var(--border); border-radius: 8px;
+    font-size: 13px; color: var(--gray); outline: none; background: #fff; min-width: 0;
+  }
+  .pool-row input[type=number] {
+    width: 100px; padding: 6px 8px; text-align: right;
+    border: 1.5px solid var(--border); border-radius: 8px;
+    font-size: 13px; color: var(--gray); outline: none; background: #fff; flex-shrink: 0;
+  }
+  .pool-row input:focus { border-color: var(--blue); }
+  .pool-row input[type=number].inc:focus { border-color: var(--green); }
+  .pool-row input[type=number].exp:focus { border-color: var(--red); }
+
+  /* pool loan rows */
+  .ploan-row {
+    background: var(--gray-lt); border-radius: 10px;
+    padding: 10px 12px; margin-bottom: 8px;
+    border: 1px solid var(--border);
+  }
+  .ploan-top {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+  }
+  .ploan-top input[type=text] {
+    flex: 1; padding: 6px 9px;
+    border: 1.5px solid var(--border); border-radius: 8px;
+    font-size: 13px; color: var(--gray); outline: none; background: #fff;
+  }
+  .ploan-top input:focus { border-color: var(--blue); }
+  .ploan-grid {
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;
+  }
+  @media (max-width: 380px) { .ploan-grid { grid-template-columns: 1fr 1fr; } }
+  .ploan-field { display: flex; flex-direction: column; gap: 2px; }
+  .ploan-field label { font-size: 10px; color: #6b7280; font-weight: 600; }
+  .ploan-field input {
+    padding: 6px 8px; text-align: right;
+    border: 1.5px solid var(--border); border-radius: 8px;
+    font-size: 13px; color: var(--gray); outline: none; background: #fff;
+  }
+  .ploan-field input:focus { border-color: var(--blue); }
+  .ploan-balance {
+    margin-top: 8px; font-size: 12px; font-weight: 700;
+    text-align: right; color: var(--amber);
+  }
+
+  /* ── LOAN SECTION (editable) ── */
+  .loan-card {
+    background: #fff; border-radius: var(--radius);
+    box-shadow: var(--shadow); margin-bottom: 10px; overflow: hidden;
+  }
+  .loan-card-hdr {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 14px; cursor: pointer; user-select: none;
+    transition: background .15s;
+  }
+  .loan-card-hdr:hover { background: var(--blue-lt); }
+  .loan-hdr-left { display: flex; flex-direction: column; }
+  .loan-room-num { font-size: 15px; font-weight: 800; color: var(--blue); }
+  .loan-hdr-sub  { font-size: 11px; color: #6b7280; margin-top: 1px; }
+  .loan-hdr-right { display: flex; align-items: center; gap: 8px; }
+  .loan-remaining-badge {
+    font-size: 12px; font-weight: 700;
+    padding: 3px 10px; border-radius: 20px;
+    background: var(--amber-lt); color: var(--amber);
+  }
+  .loan-chevron { font-size: 12px; color: #9ca3af; transition: transform .2s; display:inline-block; }
+  .loan-chevron.open { transform: rotate(180deg); }
+  .loan-body { padding: 14px; display: none; border-top: 1px solid var(--border); }
+  .loan-body.open { display: block; }
+  .loan-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;
+  }
+  .loan-field { display: flex; flex-direction: column; gap: 3px; }
+  .loan-field label { font-size: 11px; color: #6b7280; font-weight: 600; }
+  .loan-field input {
+    padding: 8px 10px; text-align: right;
+    border: 1.5px solid var(--border); border-radius: 8px;
+    font-size: 14px; font-weight: 600; color: var(--gray);
+    outline: none; background: #fff;
+  }
+  .loan-field input:focus { border-color: var(--blue); }
+  .loan-progress-wrap { margin-bottom: 10px; }
+  .loan-progress-bar { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+  .loan-progress-fill { height: 100%; background: var(--green); border-radius: 4px; transition: width .4s; }
+  .loan-progress-label {
+    font-size: 11px; color: #6b7280; margin-top: 3px;
+    display: flex; justify-content: space-between;
+  }
+  .loan-net-row {
+    display: flex; justify-content: space-between; align-items: center;
+    background: var(--amber-lt); border-radius: 8px; padding: 10px 12px;
+  }
+  .loan-net-row .ln-label { color: #92400e; font-weight: 600; font-size: 13px; }
+  .loan-net-row .ln-val   { font-size: 17px; font-weight: 800; color: var(--amber); }
+  .loan-summary-card {
+    background:#fff; border-radius:var(--radius); box-shadow:var(--shadow);
+    padding:14px; margin-bottom:10px;
+  }
+
+
+  /* ── TENANT SECTION ── */
+  .tsec { border-top: 1px solid var(--border); }
+  .tsec-toggle {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 14px; cursor: pointer;
+    font-size: 13px; font-weight: 600; color: #6b7280;
+    user-select: none; transition: background .15s; gap: 8px;
+  }
+  .tsec-toggle:hover { background: var(--gray-lt); }
+  .tsec-toggle .x-left { display: flex; align-items: center; gap: 6px; }
+  .tsec-body { padding: 4px 14px 14px; background: #fafafa; display: none; }
+  .tsec-body.open { display: block; }
+  .tenant-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px;
+  }
+  .tenant-field { display: flex; flex-direction: column; gap: 3px; }
+  .tenant-field label { font-size: 11px; color: #6b7280; font-weight: 600; }
+  .tenant-field input {
+    padding: 7px 9px;
+    border: 1.5px solid var(--border); border-radius: 8px;
+    font-size: 13px; color: var(--gray); outline: none; background: #fff;
+    width: 100%;
+  }
+  .tenant-field input:focus { border-color: var(--blue); }
+  .tenant-field input[type=date] { font-size: 12px; }
+  .expiry-tag {
+    display: inline-block; border-radius: 20px; font-size: 11px; font-weight: 700;
+    padding: 3px 10px;
+  }
+  .expiry-ok     { background: var(--green-lt); color: var(--green); }
+  .expiry-warn   { background: var(--amber-lt); color: var(--amber); }
+  .expiry-urgent { background: var(--red-lt);   color: var(--red);   }
+  .deposit-tag {
+    display: inline-block; background: var(--blue-lt); color: var(--blue);
+    border-radius: 20px; font-size: 11px; font-weight: 700; padding: 3px 10px;
+    margin-left: 6px;
+  }
+
+
+  /* ── Deposit KPI ── */
+  #kpi-deposit-wrap { display: none; }
+  #kpi-deposit-wrap.has-deposit { display: block; }
+
+  /* ── TOPBAR ── */
+  .topbar {
+    position:fixed;top:0;left:0;right:0;height:52px;
+    background:#fff;border-bottom:1px solid var(--border);
+    display:flex;align-items:center;gap:8px;padding:0 14px;z-index:100;
+  }
+  .topbar-logo { font-size:15px;font-weight:800;color:var(--blue);letter-spacing:-.3px;white-space:nowrap }
+  .topbar-sub  { font-size:11px;color:#9ca3af;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis }
+
+  /* ── SIDEBAR ── */
+  --sidebar-w: 210px;
+  .sidebar {
+    position:fixed;top:52px;left:0;bottom:0;width:210px;
+    background:#fff;border-right:1px solid var(--border);
+    overflow-y:auto;z-index:90;padding:10px 0;
+  }
+  .nav-item {
+    display:flex;align-items:center;gap:8px;padding:9px 14px;
+    font-size:13px;font-weight:500;color:#6b7280;cursor:pointer;
+    border-radius:8px;margin:0 6px;transition:all .15s;
+  }
+  .nav-item:hover { background:var(--gray-lt);color:var(--gray) }
+  .nav-item.active { background:var(--blue-lt);color:var(--blue);font-weight:600 }
+  .nav-item .ni-icon { font-size:16px;width:20px;text-align:center }
+  .nav-sep { height:1px;background:var(--border);margin:6px 10px }
+
+  /* ── MAIN AREA ── */
+  .main { margin-top:52px;margin-left:210px;padding:16px;min-height:calc(100vh - 52px) }
+  .page { display:none }
+  .page.active { display:block }
+
+  /* ── PAGE TITLE ── */
+  .page-title {
+    font-size:14px;font-weight:700;color:var(--gray);
+    margin-bottom:12px;display:flex;align-items:center;gap:6px;
+    padding-bottom:10px;border-bottom:2px solid var(--border);
+  }
+
+  /* ── MOBILE NAV ── */
+  .mobile-nav {
+    display:none;position:fixed;bottom:0;left:0;right:0;
+    background:#fff;border-top:1px solid var(--border);
+    padding:4px 0 8px;z-index:90;justify-content:space-around;
+  }
+  .mob-nav-item {
+    display:flex;flex-direction:column;align-items:center;gap:1px;
+    padding:4px 8px;cursor:pointer;font-size:10px;font-weight:600;
+    color:#9ca3af;transition:color .15s;flex:1;text-align:center;
+  }
+  .mob-nav-item.active { color:var(--blue) }
+  .mob-nav-item .mi { font-size:20px }
+  @media(max-width:600px) {
+    .sidebar { display:none }
+    .main { margin-left:0;padding:12px 10px 70px }
+    .mobile-nav { display:flex !important }
+    .topbar-sub { display:none }
+  }
+
+
+/* ── SYNC STATUS ── */
+.sync-bar{
+  display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;
+  padding:3px 10px;border-radius:20px;flex-shrink:0;transition:all .3s;
+}
+.sync-bar.ok{background:var(--green-lt);color:var(--green)}
+.sync-bar.err{background:var(--red-lt);color:var(--red)}
+.sync-bar.ing{background:var(--amber-lt);color:var(--amber)}
+.sync-bar .dot{width:7px;height:7px;border-radius:50%;background:currentColor}
+
+/* ── SETUP BANNER ── */
+.setup-banner{
+  background:linear-gradient(135deg,#166534,#16a34a);
+  color:#fff;padding:16px 20px;border-radius:var(--radius);margin-bottom:14px;
+}
+.setup-banner h3{font-size:15px;font-weight:700;margin-bottom:6px}
+.setup-banner p{font-size:13px;opacity:.9;margin-bottom:8px;line-height:1.5}
+.setup-banner code{
+  display:block;background:rgba(0,0,0,.2);border-radius:8px;
+  padding:8px 12px;font-size:12px;font-family:monospace;
+  word-break:break-all;margin-bottom:8px;
+}
+.setup-banner .step{display:flex;gap:8px;align-items:flex-start;margin-bottom:5px;font-size:12px;opacity:.9}
+.setup-banner .sn{
+  background:rgba(255,255,255,.25);border-radius:50%;
+  width:20px;height:20px;display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;flex-shrink:0;
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-logo">🏠 The Base</div>
+  <div class="topbar-sub">เชิงทะเล ภูเก็ต · by Sansiri</div>
+  <div class="sync-bar ing" id="sync-status"><div class="dot"></div><span id="sync-label">กำลังโหลด...</span></div>
+</div>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="nav-item active" data-page="overview" onclick="navTo('overview',this)">
+    <span class="ni-icon">📊</span>ภาพรวม
+  </div>
+  <div class="nav-item" data-page="pool" onclick="navTo('pool',this)">
+    <span class="ni-icon">🏦</span>กองกลาง
+  </div>
+  <div class="nav-item" data-page="rooms" onclick="navTo('rooms',this)">
+    <span class="ni-icon">🛏</span>จัดการห้อง
+  </div>
+  <div class="nav-item" data-page="cashflow" onclick="navTo('cashflow',this)">
+    <span class="ni-icon">💰</span>Cash Flow
+  </div>
+  <div class="nav-item" data-page="loan" onclick="navTo('loan',this)">
+    <span class="ni-icon">📋</span>แผนการกู้
+  </div>
+</nav>
+
+<!-- MOBILE NAV -->
+<div class="mobile-nav">
+  <div class="mob-nav-item active" data-page="overview" onclick="navTo('overview',this)"><div class="mi">📊</div>ภาพรวม</div>
+  <div class="mob-nav-item" data-page="pool" onclick="navTo('pool',this)"><div class="mi">🏦</div>กองกลาง</div>
+  <div class="mob-nav-item" data-page="rooms" onclick="navTo('rooms',this)"><div class="mi">🛏</div>ห้อง</div>
+  <div class="mob-nav-item" data-page="cashflow" onclick="navTo('cashflow',this)"><div class="mi">💰</div>CF</div>
+  <div class="mob-nav-item" data-page="loan" onclick="navTo('loan',this)"><div class="mi">📋</div>กู้</div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+<!-- ── OVERVIEW ── -->
+<!-- SETUP BANNER -->
+<div id="sheets-setup-banner" class="main" style="display:none">
+  <div class="setup-banner">
+    <h3>📊 ตั้งค่า Google Sheets</h3>
+    <p>ทำตาม 4 ขั้นตอนนี้ครั้งเดียว แล้วข้อมูลจะบันทึกลง Google Sheet อัตโนมัติ</p>
+    <div class="step"><div class="sn">1</div><div>สร้าง <strong>Google Sheet</strong> ใหม่</div></div>
+    <div class="step"><div class="sn">2</div><div>ไปที่ <strong>Extensions → Apps Script</strong></div></div>
+    <div class="step"><div class="sn">3</div><div>วาง code จากไฟล์ <strong>apps-script.gs</strong> แล้ว Deploy → New deployment → Web app (Anyone can access)</div></div>
+    <div class="step"><div class="sn">4</div><div>Copy URL มาวางใน <strong>SCRIPT_URL</strong> ในไฟล์ this HTML แล้วรีเฟรช</div></div>
+  </div>
+</div>
+
+<div id="page-overview" class="page">
+  <div class="page-title">📊 ภาพรวมวันนี้</div>
+
+  <div class="kpi-grid">
+    <div class="kpi">
+      <div class="label">ห้องที่มีคนเช่า</div>
+      <div class="number" id="kpi-rented" style="color:var(--green)">— / 4</div>
+      <div class="sub">ห้อง</div>
+    </div>
+    <div class="kpi">
+      <div class="label">รายได้เช่าจริง/เดือน</div>
+      <div class="number" id="kpi-income" style="color:var(--green)">—</div>
+      <div class="sub">บาท</div>
+    </div>
+    <div class="kpi">
+      <div class="label">ผ่อนแบงค์รวม/เดือน</div>
+      <div class="number" id="kpi-mortgage" style="color:var(--amber)">40,332</div>
+      <div class="sub">บาท (4 ห้อง)</div>
+    </div>
+    <div class="kpi" id="kpi-deposit-wrap" style="display:none">
+      <div class="label">มัดจำรวม</div>
+      <div class="number" id="kpi-deposit" style="color:var(--teal)">—</div>
+      <div class="sub">บาท (ผู้เช่าทุกห้อง)</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Net Cash Flow</div>
+      <div class="number" id="kpi-net">—</div>
+      <div class="sub">บาท/เดือน</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div style="font-size:13px;font-weight:600;margin-bottom:8px;color:#6b7280">อัตราการเช่า (Occupancy)</div>
+    <div class="occ-bar-wrap">
+      <div class="occ-bar"><div class="occ-fill" id="occ-fill" style="width:0%"></div></div>
+      <div class="occ-label" id="occ-label">0 / 4 ห้อง</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ── POOL ACCOUNT ── -->
+<div id="page-pool" class="page">
+  <div class="page-title">💰 บัญชีกองกลางครอบครัว</div>
+
+  <div class="kpi-grid" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:10px">
+    <div class="kpi">
+      <div class="label">เงินเข้ารวม</div>
+      <div class="number" id="pool-total-inc" style="color:var(--green);font-size:16px">0</div>
+      <div class="sub">บาท</div>
+    </div>
+    <div class="kpi">
+      <div class="label">เงินออกรวม</div>
+      <div class="number" id="pool-total-exp" style="color:var(--red);font-size:16px">0</div>
+      <div class="sub">บาท</div>
+    </div>
+    <div class="kpi">
+      <div class="label">ยอดคงเหลือ</div>
+      <div class="number" id="pool-balance" style="font-size:16px">0</div>
+      <div class="sub">บาท</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div style="font-size:13px;font-weight:700;color:var(--blue);margin-bottom:10px">📒 รายการเงินเข้า-ออก</div>
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--green);margin-bottom:7px">💚 เงินเข้า</div>
+    <div id="pool-rows-inc"></div>
+    <button class="xbtn-add inc" onclick="addPoolRow('income')" style="margin-bottom:14px">＋ เพิ่มรายการเงินเข้า</button>
+    <div style="height:1px;background:var(--border);margin-bottom:12px"></div>
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--red);margin-bottom:7px">❤️ เงินออก</div>
+    <div id="pool-rows-exp"></div>
+    <button class="xbtn-add exp" onclick="addPoolRow('expenses')">＋ เพิ่มรายการเงินออก</button>
+  </div>
+
+  <div class="card">
+    <div style="font-size:13px;font-weight:700;color:var(--blue);margin-bottom:10px">🤝 แผนเงินกู้ยืมจากภายนอก</div>
+    <div id="pool-loan-rows"></div>
+    <button class="xbtn-add inc" onclick="addPoolLoan()" style="border-color:var(--blue);color:var(--blue)">＋ เพิ่มแหล่งเงินกู้ยืม</button>
+  </div>
+</div>
+
+<!-- ── ROOM MANAGEMENT ── -->
+<div id="page-rooms" class="page">
+  <div class="page-title">🔑 จัดการห้องเช่า</div>
+
+  <!-- ROOM 203 -->
+  <div class="room-card" id="card-203">
+    <div class="room-card-header">
+      <div>
+        <div class="room-badge">ห้อง 203</div>
+        <div class="room-meta">ตึก A · ชั้น 2 · 29.5 ตร.ม. · BBL 2.4%</div>
+      </div>
+      <div class="toggle-wrap">
+        <span class="status-badge" id="badge-203">ว่าง</span>
+        <label class="toggle">
+          <input type="checkbox" id="toggle-203" onchange="toggleRoom('203')">
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+    <div class="room-body">
+      <div class="field-row">
+        <span class="field-label">ราคาเช่าที่ตั้งไว้</span>
+        <span class="field-val" style="color:var(--blue)">22,000 บาท/เดือน</span>
+      </div>
+      <div class="field-row">
+        <span class="field-label">ราคาเช่าจริง</span>
+        <div>
+          <div class="rent-input-wrap">
+            <input type="number" class="rent-input" id="rent-203" placeholder="22,000"
+              oninput="updateRoom('203')" min="0" step="500">
+            <span class="rent-unit">บาท/เดือน</span>
+          </div>
+          <div class="rent-diff" id="diff-203"></div>
+        </div>
+      </div>
+      <div class="cf-mini">
+        <span class="cf-label" id="cf-label-203">Net (เช่า − ผ่อน 10,165)</span>
+        <span class="cf-val" id="cf-203">—</span>
+      </div>
+      <div class="tsec">
+        <div class="tsec-toggle" onclick="toggleTSec('203')">
+          <div class="x-left">
+            <span class="xsec-chevron" id="tchev-203">▼</span>
+            <span>👤 ผู้เช่าและสัญญา</span>
+          </div>
+          <span class="xsec-summary" id="tsec-sum-203"></span>
+        </div>
+        <div class="tsec-body" id="tsec-body-203">
+          <div class="tenant-grid">
+            <div class="tenant-field">
+              <label>ชื่อผู้เช่า</label>
+              <input type="text" id="t-name-203" placeholder="ชื่อ-นามสกุล"
+                oninput="tenantUpdate('203','name',this.value)">
+            </div>
+            <div class="tenant-field">
+              <label>เบอร์โทร</label>
+              <input type="tel" id="t-phone-203" placeholder="08x-xxx-xxxx"
+                oninput="tenantUpdate('203','phone',this.value)">
+            </div>
+            <div class="tenant-field">
+              <label>วันเข้าอยู่</label>
+              <input type="date" id="t-movein-203"
+                oninput="tenantUpdate('203','movein',this.value)">
+            </div>
+            <div class="tenant-field">
+              <label>วันหมดสัญญา</label>
+              <input type="date" id="t-expiry-203"
+                oninput="tenantUpdate('203','expiry',this.value)">
+            </div>
+            <div class="tenant-field" style="grid-column:1/-1">
+              <label>เงินมัดจำ (บาท)</label>
+              <input type="number" id="t-deposit-203" placeholder="0" min="0" step="500"
+                oninput="tenantUpdate('203','deposit',this.value)">
+            </div>
+          </div>
+          <div id="t-expiry-label-203" style="margin-top:8px"></div>
+        </div>
+      </div>
+      <div class="xsec">
+        <div class="xsec-toggle" onclick="toggleXSec('203')">
+          <div class="x-left">
+            <span class="xsec-chevron" id="xchev-203">▼</span>
+            <span>รายรับ / ค่าใช้จ่ายอื่น</span>
+          </div>
+          <span class="xsec-summary" id="xsec-sum-203"></span>
+        </div>
+        <div class="xsec-body" id="xsec-body-203">
+          <div class="xgroup">
+            <div class="xgroup-hdr inc">💚 รายรับเพิ่มเติม</div>
+            <div id="xrows-203-inc"></div>
+            <button class="xbtn-add inc" onclick="addXRow('203','income')">＋ เพิ่มรายรับ</button>
+            <div class="xsubtotal inc" id="xsub-203-inc" style="display:none"></div>
+          </div>
+          <div class="xgroup" style="margin-bottom:4px">
+            <div class="xgroup-hdr exp">❤️ ค่าใช้จ่ายเพิ่มเติม</div>
+            <div id="xrows-203-exp"></div>
+            <button class="xbtn-add exp" onclick="addXRow('203','expenses')">＋ เพิ่มรายจ่าย</button>
+            <div class="xsubtotal exp" id="xsub-203-exp" style="display:none"></div>
+          </div>
+        </div>
+      </div>
+      <div class="cf-full" id="cf-full-203" style="display:none">
+        <span class="cf-f-label">💰 Net สุทธิรวมทุกรายการ</span>
+        <span class="cf-f-val" id="cf-full-val-203">—</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROOM 204 -->
+  <div class="room-card" id="card-204">
+    <div class="room-card-header">
+      <div>
+        <div class="room-badge">ห้อง 204</div>
+        <div class="room-meta">ตึก A · ชั้น 2 · 29.5 ตร.ม. · UOB 2.5%</div>
+      </div>
+      <div class="toggle-wrap">
+        <span class="status-badge" id="badge-204">ว่าง</span>
+        <label class="toggle">
+          <input type="checkbox" id="toggle-204" onchange="toggleRoom('204')">
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+    <div class="room-body">
+      <div class="field-row">
+        <span class="field-label">ราคาเช่าที่ตั้งไว้</span>
+        <span class="field-val" style="color:var(--blue)">22,000 บาท/เดือน</span>
+      </div>
+      <div class="field-row">
+        <span class="field-label">ราคาเช่าจริง</span>
+        <div>
+          <div class="rent-input-wrap">
+            <input type="number" class="rent-input" id="rent-204" placeholder="22,000"
+              oninput="updateRoom('204')" min="0" step="500">
+            <span class="rent-unit">บาท/เดือน</span>
+          </div>
+          <div class="rent-diff" id="diff-204"></div>
+        </div>
+      </div>
+      <div class="cf-mini">
+        <span class="cf-label" id="cf-label-204">Net (เช่า − ผ่อน 9,910)</span>
+        <span class="cf-val" id="cf-204">—</span>
+      </div>
+      <div class="tsec">
+        <div class="tsec-toggle" onclick="toggleTSec('204')">
+          <div class="x-left">
+            <span class="xsec-chevron" id="tchev-204">▼</span>
+            <span>👤 ผู้เช่าและสัญญา</span>
+          </div>
+          <span class="xsec-summary" id="tsec-sum-204"></span>
+        </div>
+        <div class="tsec-body" id="tsec-body-204">
+          <div class="tenant-grid">
+            <div class="tenant-field">
+              <label>ชื่อผู้เช่า</label>
+              <input type="text" id="t-name-204" placeholder="ชื่อ-นามสกุล"
+                oninput="tenantUpdate('204','name',this.value)">
+            </div>
+            <div class="tenant-field">
+              <label>เบอร์โทร</label>
+              <input type="tel" id="t-phone-204" placeholder="08x-xxx-xxxx"
+                oninput="tenantUpdate('204','phone',this.value)">
+            </div>
+            <div class="tenant-field">
+              <label>วันเข้าอยู่</label>
+              <input type="date" id="t-movein-204"
+                oninput="tenantUpdate('204','movein',this.value)">
+            </div>
+            <div class="tenant-field">
+              <label>วันหมดสัญญา</label>
+              <input type="date" id="t-expiry-204"
+                oninput="tenantUpdate('204','expiry',this.value)">
+            </div>
+            <div class="tenant-field" style="grid-column:1/-1">
+              <label>เงินมัดจำ (บาท)</label>
+              <input type="number" id="t-deposit-204" placeholder="0" min="0" step="500"
+                oninput="tenantUpdate('204','deposit',this.value)">
+            </div>
+          </div>
+          <div id="t-expiry-label-204" style="margin-top:8px"></div>
+        </div>
+      </div>
+      <div class="xsec">
+        <div class="xsec-toggle" onclick="toggleXSec('204')">
+          <div class="x-left">
+            <span class="xsec-chevron" id="xchev-204">▼</span>
+            <span>รายรับ / ค่าใช้จ่ายอื่น</span>
+          </div>
+          <span class="xsec-summary" id="xsec-sum-204"></span>
+        </div>
+        <div class="xsec-body" id="xsec-body-204">
+          <div class="xgroup">
+            <div class="xgroup-hdr inc">💚 รายรับเพิ่มเติม</div>
+            <div id="xrows-204-inc"></div>
+            <button class="xbtn-add inc" onclick="addXRow('204','income')">＋ เพิ่มรายรับ</button>
+            <div class="xsubtotal inc" id="xsub-204-inc" style="display:none"></div>
+          </div>
+          <div class="xgroup" style="margin-bottom:4px">
+            <div class="xgroup-hdr exp">❤️ ค่าใช้จ่ายเพิ่มเติม</div>
+            <div id="xrows-204-exp"></div>
+            <button class="xbtn-add exp" onclick="addXRow('204','expenses')">＋ เพิ่มรายจ่าย</button>
+            <div class="xsubtotal exp" id="xsub-204-exp" style="display:none"></div>
+          </div>
+        </div>
+      </div>
+      <div class="cf-full" id="cf-full-204" style="display:none">
+        <span class="cf-f-label">💰 Net สุทธิรวมทุกรายการ</span>
+        <span class="cf-f-val" id="cf-full-val-204">—</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROOM 220 -->
+  <div class="room-card" id="card-220">
+    <div class="room-card-header">
+      <div>
+        <div class="room-badge pet">ห้อง 220 <span class="pet-tag">🐾 Pet</span></div>
+        <div class="room-meta">ตึก B · ชั้น 2 · 29.5 ตร.ม. · SCB 80% 2.1%</div>
+      </div>
+      <div class="toggle-wrap">
+        <span class="status-badge" id="badge-220">ว่าง</span>
+        <label class="toggle">
+          <input type="checkbox" id="toggle-220" onchange="toggleRoom('220')">
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+    <div class="room-body">
+      <div class="field-row">
+        <span class="field-label">ราคาเช่าที่ตั้งไว้</span>
+        <span class="field-val" style="color:var(--blue)">24,000 บาท/เดือน</span>
+      </div>
+      <div class="field-row">
+        <span class="field-label">ราคาเช่าจริง</span>
+        <div>
+          <div class="rent-input-wrap">
+            <input type="number" class="rent-input" id="rent-220" placeholder="24,000"
+              oninput="updateRoom('220')" min="0" step="500">
+            <span class="rent-unit">บาท/เดือน</span>
+          </div>
+          <div class="rent-diff" id="diff-220"></div>
+        </div>
+      </div>
+      <div class="cf-mini">
+        <span class="cf-label" id="cf-label-220">Net (เช่า − ผ่อน 10,804)</span>
+        <span class="cf-val" id="cf-220">—</span>
+      </div>
+      <div class="tsec">
+        <div class="tsec-toggle" onclick="toggleTSec('220')">
+          <div class="x-left">
+            <span class="xsec-chevron" id="tchev-220">▼</span>
+            <span>👤 ผู้เช่าและสัญญา</span>
+          </div>
+          <span class="xsec-summary" id="tsec-sum-220"></span>
+        </div>
+        <div class="tsec-body" id="tsec-body-220">
+          <div class="tenant-grid">
+            <div class="tenant-field">
+              <label>ชื่อผู้เช่า</label>
+              <input type="text" id="t-name-220" placeholder="ชื่อ-นามสกุล"
+                oninput="tenantUpdate('220','name',this.value)">
+            </div>
+            <div class="tenant-field">
+              <label>เบอร์โทร</label>
+              <input type="tel" id="t-phone-220" placeholder="08x-xxx-xxxx"
+                oninput="tenantUpdate('220','phone',this.value)">
+            </div>
+            <div class="tenant-field">
+              <label>วันเข้าอยู่</label>
+              <input type="date" id="t-movein-220"
+                oninput="tenantUpdate('220','movein',this.value)">
+            </div>
+            <div class="tenant-field">
+              <label>วันหมดสัญญา</label>
+              <input type="date" id="t-expiry-220"
+                oninput="tenantUpdate('220','expiry',this.value)">
+            </div>
+            <div class="tenant-field" style="grid-column:1/-1">
+              <label>เงินมัดจำ (บาท)</label>
+              <input type="number" id="t-deposit-220" placeholder="0" min="0" step="500"
+                oninput="tenantUpdate('220','deposit',this.value)">
+            </div>
+          </div>
+          <div id="t-expiry-label-220" style="margin-top:8px"></div>
+        </div>
+      </div>
+      <div class="xsec">
+        <div class="xsec-toggle" onclick="toggleXSec('220')">
+          <div class="x-left">
+            <span class="xsec-chevron" id="xchev-220">▼</span>
+            <span>รายรับ / ค่าใช้จ่ายอื่น</span>
+          </div>
+          <span class="xsec-summary" id="xsec-sum-220"></span>
+        </div>
+        <div class="xsec-body" id="xsec-body-220">
+          <div class="xgroup">
+            <div class="xgroup-hdr inc">💚 รายรับเพิ่มเติม</div>
+            <div id="xrows-220-inc"></div>
+            <button class="xbtn-add inc" onclick="addXRow('220','income')">＋ เพิ่มรายรับ</button>
+            <div class="xsubtotal inc" id="xsub-220-inc" style="display:none"></div>
+          </div>
+          <div class="xgroup" style="margin-bottom:4px">
+            <div class="xgroup-hdr exp">❤️ ค่าใช้จ่ายเพิ่มเติม</div>
+            <div id="xrows-220-exp"></div>
+            <button class="xbtn-add exp" onclick="addXRow('220','expenses')">＋ เพิ่มรายจ่าย</button>
+            <div class="xsubtotal exp" id="xsub-220-exp" style="display:none"></div>
+          </div>
+        </div>
+      </div>
+      <div class="cf-full" id="cf-full-220" style="display:none">
+        <span class="cf-f-label">💰 Net สุทธิรวมทุกรายการ</span>
+        <span class="cf-f-val" id="cf-full-val-220">—</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROOM 221 -->
+  <div class="room-card" id="card-221">
+    <div class="room-card-header">
+      <div>
+        <div class="room-badge pet">ห้อง 221 <span class="pet-tag">🐾 Pet</span></div>
+        <div class="room-meta">ตึก B · ชั้น 2 · 29.5 ตร.ม. · SCB 70% 2.1%</div>
+      </div>
+      <div class="toggle-wrap">
+        <span class="status-badge" id="badge-221">ว่าง</span>
+        <label class="toggle">
+          <input type="checkbox" id="toggle-221" onchange="toggleRoom('221')">
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+    <div class="room-body">
+      <div class="field-row">
+        <span class="field-label">ราคาเช่าที่ตั้งไว้</span>
+        <span class="field-val" style="color:var(--blue)">24,000 บาท/เดือน</span>
+      </div>
+      <div class="field-row">
+        <span class="field-label">ราคาเช่าจริง</span>
+        <div>
+          <div class="rent-input-wrap">
+            <input type="number" class="rent-input" id="rent-221" placeholder="24,000"
+              oninput="updateRoom('221')" min="0" step="500">
+            <span class="rent-unit">บาท/เดือน</span>
+          </div>
+          <div class="rent-diff" id="diff-221"></div>
+        </div>
+      </div>
+      <div class="cf-mini">
+        <span class="cf-label" id="cf-label-221">Net (เช่า − ผ่อน 9,453)</span>
+        <span class="cf-val" id="cf-221">—</span>
+      </div>
+      <div class="tsec">
+        <div class="tsec-toggle" onclick="toggleTSec('221')">
+          <div class="x-left">
+            <span class="xsec-chevron" id="tchev-221">▼</span>
+            <span>👤 ผู้เช่าและสัญญา</span>
+          </div>
+          <span class="xsec-summary" id="tsec-sum-221"></span>
+        </div>
+        <div class="tsec-body" id="tsec-body-221">
+          <div class="tenant-grid">
+            <div class="tenant-field">
+              <label>ชื่อผู้เช่า</label>
+              <input type="text" id="t-name-221" placeholder="ชื่อ-นามสกุล"
+                oninput="tenantUpdate('221','name',this.value)">
+            </div>
+            <div class="tenant-field">
+              <label>เบอร์โทร</label>
+              <input type="tel" id="t-phone-221" placeholder="08x-xxx-xxxx"
+                oninput="tenantUpdate('221','phone',this.value)">
+            </div>
+            <div class="tenant-field">
+              <label>วันเข้าอยู่</label>
+              <input type="date" id="t-movein-221"
+                oninput="tenantUpdate('221','movein',this.value)">
+            </div>
+            <div class="tenant-field">
+              <label>วันหมดสัญญา</label>
+              <input type="date" id="t-expiry-221"
+                oninput="tenantUpdate('221','expiry',this.value)">
+            </div>
+            <div class="tenant-field" style="grid-column:1/-1">
+              <label>เงินมัดจำ (บาท)</label>
+              <input type="number" id="t-deposit-221" placeholder="0" min="0" step="500"
+                oninput="tenantUpdate('221','deposit',this.value)">
+            </div>
+          </div>
+          <div id="t-expiry-label-221" style="margin-top:8px"></div>
+        </div>
+      </div>
+      <div class="xsec">
+        <div class="xsec-toggle" onclick="toggleXSec('221')">
+          <div class="x-left">
+            <span class="xsec-chevron" id="xchev-221">▼</span>
+            <span>รายรับ / ค่าใช้จ่ายอื่น</span>
+          </div>
+          <span class="xsec-summary" id="xsec-sum-221"></span>
+        </div>
+        <div class="xsec-body" id="xsec-body-221">
+          <div class="xgroup">
+            <div class="xgroup-hdr inc">💚 รายรับเพิ่มเติม</div>
+            <div id="xrows-221-inc"></div>
+            <button class="xbtn-add inc" onclick="addXRow('221','income')">＋ เพิ่มรายรับ</button>
+            <div class="xsubtotal inc" id="xsub-221-inc" style="display:none"></div>
+          </div>
+          <div class="xgroup" style="margin-bottom:4px">
+            <div class="xgroup-hdr exp">❤️ ค่าใช้จ่ายเพิ่มเติม</div>
+            <div id="xrows-221-exp"></div>
+            <button class="xbtn-add exp" onclick="addXRow('221','expenses')">＋ เพิ่มรายจ่าย</button>
+            <div class="xsubtotal exp" id="xsub-221-exp" style="display:none"></div>
+          </div>
+        </div>
+      </div>
+      <div class="cf-full" id="cf-full-221" style="display:none">
+        <span class="cf-f-label">💰 Net สุทธิรวมทุกรายการ</span>
+        <span class="cf-f-val" id="cf-full-val-221">—</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── CASHFLOW SUMMARY ── -->
+<div id="page-cashflow" class="page">
+  <div class="page-title">💰 สรุป Cash Flow รายเดือน</div>
+
+  <div class="cf-big cf-green" id="cf-total-box">
+    <div class="cf-tag">Net Cash Flow รวม (เฉพาะห้องที่มีคนเช่า)</div>
+    <div class="cf-num" id="cf-total-num">—</div>
+    <div class="cf-sub" id="cf-total-sub">ยังไม่มีข้อมูล</div>
+  </div>
+
+  <div class="card" style="overflow-x:auto">
+    <table class="tbl">
+      <thead>
+        <tr>
+          <th>ห้อง</th>
+          <th>สถานะ</th>
+          <th>เช่าจริง</th>
+          <th>ผ่อน</th>
+          <th>Net</th>
+        </tr>
+      </thead>
+      <tbody id="cf-tbody">
+        <tr><td>203</td><td id="t-status-203">ว่าง</td><td>—</td><td id="t-mort-203">10,165</td><td id="t-net-203" style="color:#9ca3af">—</td></tr>
+        <tr><td>204</td><td id="t-status-204">ว่าง</td><td>—</td><td id="t-mort-204">9,910</td><td id="t-net-204" style="color:#9ca3af">—</td></tr>
+        <tr><td>220</td><td id="t-status-220">ว่าง</td><td>—</td><td id="t-mort-220">10,804</td><td id="t-net-220" style="color:#9ca3af">—</td></tr>
+        <tr><td>221</td><td id="t-status-221">ว่าง</td><td>—</td><td id="t-mort-221">9,453</td><td id="t-net-221" style="color:#9ca3af">—</td></tr>
+        <tr class="total">
+          <td>รวม</td>
+          <td id="t-rented-count">0/4</td>
+          <td id="t-total-rent">—</td>
+          <td id="t-total-mort">40,332</td>
+          <td id="t-total-net">—</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="alert warn">
+    <div class="icon">⚠️</div>
+    <div>ดอกเบี้ยโปรโมชั่น <strong>3 ปีแรกเท่านั้น</strong> หลังจากนั้น MRR ~6-7% ค่าผ่อนต่อห้องอาจเพิ่มเป็น ~16,000-18,000 บาท/เดือน</div>
+  </div>
+  <div class="alert info">
+    <div class="icon">💡</div>
+    <div>Net ที่แสดงยังไม่รวมค่าส่วนกลาง, ประกัน, บำรุงรักษา ประมาณ 15-20% ของค่าเช่า</div>
+  </div>
+</div>
+
+<!-- ── LOAN INFO ── -->
+<div id="page-loan" class="page">
+  <div class="page-title">🏦 แผนการกู้</div>
+
+  <!-- Per-room collapsible cards (rendered by JS) -->
+  <div id="loan-cards"></div>
+
+  <!-- Summary table -->
+  <div class="loan-summary-card">
+    <div style="font-size:13px;font-weight:700;color:var(--blue);margin-bottom:10px">📊 สรุปภาพรวมสินเชื่อ</div>
+    <div style="overflow-x:auto">
+      <table class="tbl">
+        <thead>
+          <tr>
+            <th>ห้อง</th><th>ธนาคาร</th><th>วงเงิน</th><th>คงเหลือ</th><th>ผ่อน/ด</th>
+          </tr>
+        </thead>
+        <tbody id="loan-summary-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- benz/eve settlement (static) -->
+  <div class="card">
+    <div style="font-weight:700;font-size:13px;margin-bottom:8px">เงินที่กองกลางติดค้าง benz</div>
+    <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px">
+      <span style="color:#6b7280">benz จ่ายผ่อนไปก่อน</span><span style="font-weight:600">2,298,336 บาท</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px">
+      <span style="color:#6b7280">อีฟคืนได้จากกู้</span><span style="font-weight:600;color:var(--green)">1,937,859 บาท</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px">
+      <span style="color:#6b7280">กองกลางติดค้าง (หารครึ่ง)</span>
+      <span style="font-weight:700;color:var(--amber)">180,239 บาท</span>
+    </div>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<div class="saved-toast" id="toast">✅ บันทึกแล้ว</div>
+
+<script>
+const ROOMS = {
+  '203': { target: 22000, mortgage: 10165 },
+  '204': { target: 22000, mortgage: 9910  },
+  '220': { target: 24000, mortgage: 10804 },
+  '221': { target: 24000, mortgage: 9453  },
+};
+
+const EXTRA_KEY = 'thebase_extras_v1';
+let extraData = {
+  '203': { income:[], expenses:[{desc:'ค่าส่วนกลาง', amt:''}] },
+  '204': { income:[], expenses:[{desc:'ค่าส่วนกลาง', amt:''}] },
+  '220': { income:[], expenses:[{desc:'ค่าส่วนกลาง', amt:''}] },
+  '221': { income:[], expenses:[{desc:'ค่าส่วนกลาง', amt:''}] },
+};
+
+function fmt(n) { return n.toLocaleString('th-TH'); }
+function getXT(id, type) {
+  return (extraData[id]?.[type] || []).reduce((s,r)=>s+(parseFloat(r.amt)||0), 0);
+}
+
+/* ─── Row HTML ─── */
+function rowHtml(id, type, i, r) {
+  const cls = type==='income' ? 'inc' : 'exp';
+  const today = new Date().toISOString().slice(0,10);
+  const dateVal = r.date || today;
+  return `<div class="xrow">
+    <input type="date" style="width:130px;flex-shrink:0" value="${dateVal}"
+      oninput="xUpdate('${id}','${type}',${i},'date',this.value)">
+    <input type="text" placeholder="รายการ..." value="${(r.desc||'').replace(/"/g,'&quot;')}"
+      oninput="xUpdate('${id}','${type}',${i},'desc',this.value)">
+    <input type="number" class="${cls}" placeholder="0" step="any" min="0"
+      value="${(r.amt===''||r.amt==null)?'':r.amt}"
+      oninput="xUpdate('${id}','${type}',${i},'amt',this.value)">
+    <button class="xrow-del" onclick="xDel('${id}','${type}',${i})">×</button>
+  </div>`;
+}
+
+function renderRows(id) {
+  const ic = document.getElementById('xrows-'+id+'-inc');
+  const ec = document.getElementById('xrows-'+id+'-exp');
+  if(ic) ic.innerHTML = (extraData[id].income||[]).map((r,i)=>rowHtml(id,'income',i,r)).join('');
+  if(ec) ec.innerHTML = (extraData[id].expenses||[]).map((r,i)=>rowHtml(id,'expenses',i,r)).join('');
+}
+
+/* ─── Recalc extras display ─── */
+function recalcX(id) {
+  const xi = getXT(id,'income');
+  const xe = getXT(id,'expenses');
+
+  // Subtotals
+  const si = document.getElementById('xsub-'+id+'-inc');
+  const se = document.getElementById('xsub-'+id+'-exp');
+  if(si){ if(xi>0){si.style.display='block';si.textContent='รวม: +'+fmt(xi)+' บาท';}else{si.style.display='none';} }
+  if(se){ if(xe>0){se.style.display='block';se.textContent='รวม: −'+fmt(xe)+' บาท';}else{se.style.display='none';} }
+
+  // Badge in toggle header
+  const sumEl = document.getElementById('xsec-sum-'+id);
+  if(sumEl) {
+    const xnet = xi - xe;
+    if(xi===0&&xe===0) { sumEl.textContent=''; sumEl.style.background=''; sumEl.style.color=''; }
+    else {
+      const s = (xnet>0?'+':'')+fmt(xnet)+' บาท';
+      sumEl.textContent = s;
+      sumEl.style.background = xnet>=0 ? 'var(--green-lt)' : 'var(--red-lt)';
+      sumEl.style.color       = xnet>=0 ? 'var(--green)' : 'var(--red)';
+    }
+  }
+}
+
+/* ─── Toggle extras panel ─── */
+function toggleXSec(id) {
+  const body  = document.getElementById('xsec-body-'+id);
+  const chev  = document.getElementById('xchev-'+id);
+  if(!body) return;
+  const open = body.classList.toggle('open');
+  if(chev) chev.classList.toggle('open', open);
+}
+
+/* ─── Add / Delete / Update rows ─── */
+function addXRow(id, type) {
+  const i = (extraData[id][type]||[]).length;
+  extraData[id][type].push({desc:'', amt:''});
+  const key = type==='income'?'inc':'exp';
+  const c   = document.getElementById('xrows-'+id+'-'+key);
+  if(c) {
+    c.insertAdjacentHTML('beforeend', rowHtml(id,type,i,{desc:'',amt:''}));
+    c.lastElementChild?.querySelector('input[type=text]')?.focus();
+  }
+  autoSave();
+}
+
+function xDel(id, type, idx) {
+  if(!confirm('ลบรายการนี้ใช่มั้ย?')) return;
+  if(!extraData[id]||!extraData[id][type]) return;
+  if(extraData[id][type].length<=1) { extraData[id][type][0]={desc:'',amt:''}; }
+  else { extraData[id][type].splice(idx,1); }
+  renderRows(id);
+  recalcX(id);
+  updateRoom(id);
+  autoSave();
+}
+
+function xUpdate(id, type, idx, field, val) {
+  if(!extraData[id]||!extraData[id][type]||extraData[id][type][idx]==null) return;
+  extraData[id][type][idx][field] = val;
+  recalcX(id);
+  updateRoom(id);
+  autoSave();
+}
+
+/* ─── Room update ─── */
+function toggleRoom(id) {
+  /* Called ONLY by the checkbox — auto-fills rent, then delegates to updateRoom */
+  const isRented = document.getElementById('toggle-'+id).checked;
+  const rentEl = document.getElementById('rent-'+id);
+  if(isRented && !rentEl.value) { rentEl.value = ROOMS[id].target; }
+  updateRoom(id);
+}
+
+function updateRoom(id) {
+  const isRented = document.getElementById('toggle-'+id).checked;
+  const rentEl = document.getElementById('rent-'+id);
+  const rentVal  = parseInt(rentEl.value) || 0;
+  const target   = ROOMS[id].target;
+  const mortgage = ROOMS[id].mortgage;
+  const xi       = getXT(id,'income');
+  const xe       = getXT(id,'expenses');
+
+  // Status badge
+  const badge = document.getElementById('badge-'+id);
+  badge.textContent = isRented ? 'มีคนเช่า' : 'ว่าง';
+  badge.className = 'status-badge '+(isRented?'status-rented':'status-vacant');
+
+  // Card border
+  document.getElementById('card-'+id).style.borderLeft =
+    isRented ? '4px solid var(--green)' : '4px solid var(--border)';
+
+  // Diff vs target
+  const diffEl = document.getElementById('diff-'+id);
+  if(rentVal>0) {
+    const d = rentVal-target;
+    if(d>0){ diffEl.textContent='+'+fmt(d)+' จากที่ตั้งไว้'; diffEl.className='rent-diff diff-pos'; }
+    else if(d<0){ diffEl.textContent=fmt(d)+' จากที่ตั้งไว้'; diffEl.className='rent-diff diff-neg'; }
+    else { diffEl.textContent='ตรงตามที่ตั้งไว้'; diffEl.className='rent-diff diff-zero'; }
+  } else { diffEl.textContent=''; }
+
+  // cf-mini  (เช่า − ผ่อน เท่านั้น)
+  const cfEl = document.getElementById('cf-'+id);
+  if(isRented&&rentVal>0){
+    const nb = rentVal-mortgage;
+    cfEl.textContent=(nb>=0?'+':'')+fmt(nb)+' บาท';
+    cfEl.style.color=nb>=0?'var(--green)':'var(--red)';
+  } else if(isRented){
+    cfEl.textContent='−'+fmt(mortgage)+' บาท'; cfEl.style.color='var(--red)';
+  } else { cfEl.textContent='—'; cfEl.style.color='#9ca3af'; }
+
+  // cf-full  (full net including extras)
+  const fe   = document.getElementById('cf-full-'+id);
+  const fv   = document.getElementById('cf-full-val-'+id);
+  const hasX = (xi+xe)>0;
+  if(fe&&fv) {
+    if(isRented||hasX){
+      const fn = (isRented?rentVal:0) + xi - (isRented?mortgage:0) - xe;
+      fe.style.display='flex';
+      fe.className='cf-full'+(fn<0?' neg':'');
+      fv.textContent=(fn>=0?'+':'')+fmt(fn)+' บาท';
+      fv.style.color=fn>=0?'var(--green)':'var(--red)';
+    } else { fe.style.display='none'; }
+  }
+
+  // Table row
+  const tStatus = document.getElementById('t-status-'+id);
+  const tNet    = document.getElementById('t-net-'+id);
+  if(isRented){
+    tStatus.innerHTML='<span style="color:var(--green);font-weight:600">มีคนเช่า</span>';
+    if(rentVal>0){
+      const fn=rentVal+xi-mortgage-xe;
+      tNet.textContent=(fn>=0?'+':'')+fmt(fn);
+      tNet.style.color=fn>=0?'var(--green)':'var(--red)';
+    } else { tNet.textContent='—'; tNet.style.color='#9ca3af'; }
+  } else {
+    tStatus.innerHTML='<span style="color:var(--red)">ว่าง</span>';
+    tNet.textContent='—'; tNet.style.color='#9ca3af';
+  }
+
+  recalcSummary();
+}
+
+/* ─── Summary recalc ─── */
+function recalcSummary() {
+  let rentedCount=0, totalRent=0, totalNet=0;
+
+  Object.keys(ROOMS).forEach(id => {
+    const isRented = document.getElementById('toggle-'+id).checked;
+    const rentVal  = parseInt(document.getElementById('rent-'+id).value) || 0;
+    const mortgage = ROOMS[id].mortgage;
+    const xi=getXT(id,'income'), xe=getXT(id,'expenses');
+    if(isRented){
+      rentedCount++;
+      const fn = rentVal+xi-mortgage-xe;
+      totalRent += rentVal;
+      totalNet  += fn;
+    }
+  });
+
+  // KPI boxes
+  document.getElementById('kpi-rented').textContent = rentedCount+' / 4';
+  document.getElementById('kpi-rented').style.color = rentedCount>0?'var(--green)':'#9ca3af';
+  document.getElementById('kpi-income').textContent = totalRent>0?fmt(totalRent):'—';
+  const netEl = document.getElementById('kpi-net');
+  if(rentedCount>0){
+    netEl.textContent=(totalNet>=0?'+':'')+fmt(totalNet);
+    netEl.style.color=totalNet>=0?'var(--green)':'var(--red)';
+  } else { netEl.textContent='—'; netEl.style.color='#9ca3af'; }
+
+  // Occupancy
+  const pct=(rentedCount/4)*100;
+  document.getElementById('occ-fill').style.width=pct+'%';
+  document.getElementById('occ-label').textContent=rentedCount+' / 4 ห้อง ('+pct+'%)';
+
+  // Table totals
+  document.getElementById('t-rented-count').textContent=rentedCount+'/4';
+  document.getElementById('t-total-rent').textContent=totalRent>0?fmt(totalRent):'—';
+  const tTN=document.getElementById('t-total-net');
+  if(rentedCount>0){
+    tTN.textContent=(totalNet>=0?'+':'')+fmt(totalNet);
+    tTN.style.color=totalNet>=0?'var(--green)':'var(--red)';
+  } else { tTN.textContent='—'; tTN.style.color='#9ca3af'; }
+
+  // Big CF box
+  const cfBox=document.getElementById('cf-total-box');
+  const cfNum=document.getElementById('cf-total-num');
+  const cfSub=document.getElementById('cf-total-sub');
+  if(rentedCount>0){
+    cfNum.textContent=(totalNet>=0?'+':'')+fmt(totalNet)+' บาท/เดือน';
+    const totalMortAll=Object.keys(ROOMS).reduce((s,rid)=>s+(ROOMS[rid].mortgage||0),0);
+    cfSub.textContent='รายได้เช่า '+fmt(totalRent)+' − ผ่อนแบงค์ '+fmt(totalMortAll)+' (รวมค่าใช้จ่ายอื่น)';
+    cfBox.className='cf-big '+(totalNet>=0?'cf-green':'cf-red');
+  } else {
+    cfNum.textContent='—'; cfSub.textContent='กด toggle เปิดห้องที่มีคนเช่า';
+    cfBox.className='cf-big cf-green';
+  }
+}
+
+
+
+/* ═══════════════════════════════════════════════════════
+   TENANT DATA — ข้อมูลผู้เช่าและสัญญา
+   ═══════════════════════════════════════════════════════ */
+const TENANT_KEY = 'thebase_tenants_v1';
+let tenantData = {
+  '203': { name:'', phone:'', movein:'', expiry:'', deposit:'' },
+  '204': { name:'', phone:'', movein:'', expiry:'', deposit:'' },
+  '220': { name:'', phone:'', movein:'', expiry:'', deposit:'' },
+  '221': { name:'', phone:'', movein:'', expiry:'', deposit:'' },
+};
+
+function toggleTSec(id) {
+  const body = document.getElementById('tsec-body-'+id);
+  const chev = document.getElementById('tchev-'+id);
+  if(!body) return;
+  const open = body.classList.toggle('open');
+  if(chev) chev.classList.toggle('open', open);
+}
+
+function tenantUpdate(id, field, val) {
+  tenantData[id][field] = val;
+  renderTenantSummary(id);
+  renderDepositKpi();
+  autoSave();
+}
+
+function renderTenantSummary(id) {
+  const td = tenantData[id];
+  // Toggle header summary
+  const sumEl = document.getElementById('tsec-sum-'+id);
+  if(sumEl) {
+    if(td.name) {
+      let txt = td.name;
+      if(td.deposit) txt += ' · มัดจำ '+parseFloat(td.deposit).toLocaleString('th-TH')+' ฿';
+      sumEl.textContent = txt;
+      sumEl.style.background = 'var(--blue-lt)';
+      sumEl.style.color = 'var(--blue)';
+    } else {
+      sumEl.textContent = ''; sumEl.style.background=''; sumEl.style.color='';
+    }
+  }
+  // Expiry label
+  const exEl = document.getElementById('t-expiry-label-'+id);
+  if(exEl) {
+    if(!td.expiry) { exEl.innerHTML=''; return; }
+    const days = Math.round((new Date(td.expiry) - new Date()) / 86400000);
+    let cls, txt;
+    if(days < 0)       { cls='expiry-urgent'; txt='⚠️ สัญญาหมดไปแล้ว '+Math.abs(days)+' วัน'; }
+    else if(days <= 30){ cls='expiry-urgent'; txt='⚠️ หมดสัญญาใน '+days+' วัน — ต้องต่อสัญญา!'; }
+    else if(days <= 90){ cls='expiry-warn';   txt='⏰ หมดสัญญาใน '+days+' วัน'; }
+    else               { cls='expiry-ok';     txt='✓ สัญญายังเหลืออีก '+days+' วัน'; }
+    exEl.innerHTML = '<span class="expiry-tag '+cls+'">'+txt+'</span>';
+  }
+}
+
+function loadTenantFields(id) {
+  const td = tenantData[id];
+  const set = (eid, val) => { const el=document.getElementById(eid); if(el) el.value=val||''; };
+  set('t-name-'+id,    td.name);
+  set('t-phone-'+id,   td.phone);
+  set('t-movein-'+id,  td.movein);
+  set('t-expiry-'+id,  td.expiry);
+  set('t-deposit-'+id, td.deposit);
+  renderTenantSummary(id);
+}
+
+
+/* ─── Deposit KPI ─── */
+function renderDepositKpi() {
+  let total = 0;
+  Object.keys(tenantData).forEach(id => {
+    total += parseFloat(tenantData[id].deposit)||0;
+  });
+  const el = document.getElementById('kpi-deposit');
+  const wrap = document.getElementById('kpi-deposit-wrap');
+  if(el) el.textContent = total > 0 ? fmt(total) : '—';
+  if(wrap) wrap.classList.toggle('has-deposit', total > 0);
+}
+
+/* ═══════════════════════════════════════════════════════
+   POOL ACCOUNT — บัญชีกองกลางครอบครัว
+   ═══════════════════════════════════════════════════════ */
+const POOL_KEY = 'thebase_pool_v1';
+let poolData = { income:[], expenses:[], loans:[] };
+
+function poolRowHtml(type, i, r) {
+  const cls = type==='income' ? 'inc' : 'exp';
+  const today = new Date().toISOString().split('T')[0];
+  return `<div class="pool-row">
+    <input type="date" value="${r.date||today}"
+      oninput="poolUpdate('${type}',${i},'date',this.value)">
+    <input type="text" placeholder="รายการ..." value="${(r.desc||'').replace(/"/g,'&quot;')}"
+      oninput="poolUpdate('${type}',${i},'desc',this.value)">
+    <input type="number" class="${cls}" placeholder="0" step="any" min="0"
+      value="${r.amt||''}"
+      oninput="poolUpdate('${type}',${i},'amt',this.value)">
+    <button class="xrow-del" onclick="delPoolRow('${type}',${i})">×</button>
+  </div>`;
+}
+
+function poolLoanHtml(i, ln) {
+  const amt  = parseFloat(ln.amount)||0;
+  const paid = parseFloat(ln.paid)||0;
+  const rem  = Math.max(0, amt - paid);
+  const rate = parseFloat(ln.rate)||0;
+  const moInt= Math.round(rem * rate / 12 / 100);
+  const remPct = amt>0 ? Math.min(100,Math.round((1-rem/amt)*100)) : 0;
+  return `<div class="ploan-row" id="ploan-row-${i}">
+    <div class="ploan-top">
+      <input type="text" id="plinput-src-${i}" placeholder="แหล่งที่มา (เช่น พ่อ, อีฟ, ธนาคาร...)"
+        value="${(ln.source||'').replace(/"/g,'&quot;')}"
+        oninput="poolLoanUpdate(${i},'source',this.value)">
+      <button class="xrow-del" onclick="delPoolLoan(${i})">×</button>
+    </div>
+    <div class="ploan-grid">
+      <div class="ploan-field">
+        <label>ยืม (บาท)</label>
+        <input type="number" id="plinput-amt-${i}" placeholder="0" step="any" min="0" value="${ln.amount||''}"
+          oninput="poolLoanUpdate(${i},'amount',this.value)">
+      </div>
+      <div class="ploan-field">
+        <label>คืนแล้ว (บาท)</label>
+        <input type="number" id="plinput-paid-${i}" placeholder="0" step="any" min="0" value="${ln.paid||''}"
+          oninput="poolLoanUpdate(${i},'paid',this.value)">
+      </div>
+      <div class="ploan-field">
+        <label>ดอกเบี้ย (%/ปี)</label>
+        <input type="number" id="plinput-rate-${i}" placeholder="0" step="0.01" min="0" value="${ln.rate||''}"
+          oninput="poolLoanUpdate(${i},'rate',this.value)">
+      </div>
+    </div>
+    <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+      <div style="flex:1;min-width:130px;background:#fff;border-radius:8px;padding:8px 10px;border:1px solid var(--border)">
+        <div style="font-size:10px;color:#6b7280;font-weight:600;margin-bottom:2px">หนี้คงเหลือ</div>
+        <div id="plbal-${i}" style="font-size:14px;font-weight:800;color:var(--amber)">${rem.toLocaleString('th-TH')} บาท</div>
+        <div id="plprog-${i}" style="margin-top:4px">${amt>0?`<div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden"><div style="width:${remPct}%;height:100%;background:var(--green);border-radius:2px"></div></div><div style="font-size:10px;color:#9ca3af;margin-top:2px">คืนไปแล้ว ${remPct}%</div>`:''}</div>
+      </div>
+      <div id="plint-box-${i}" style="flex:1;min-width:130px;background:${rate>0?'var(--amber-lt)':'#fff'};border-radius:8px;padding:8px 10px;border:1px solid ${rate>0?'rgba(217,119,6,.3)':'var(--border)'}">
+        <div style="font-size:10px;color:#6b7280;font-weight:600;margin-bottom:2px">ดอกเบี้ย/เดือน (ลดต้นลดดอก)</div>
+        <div id="plint-${i}" style="font-size:14px;font-weight:800;color:${rate>0?'var(--amber)':'#9ca3af'}">${rate>0?moInt.toLocaleString('th-TH')+' บาท':'ยังไม่ระบุ'}</div>
+        <div id="plint-formula-${i}" style="font-size:10px;color:#9ca3af;margin-top:2px">${rate>0&&rem>0?`${rem.toLocaleString('th-TH')} × ${rate}% ÷ 12`:''}</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function updatePoolLoanDisplay(i) {
+  const ln   = poolData.loans[i];
+  if(!ln) return;
+  const amt  = parseFloat(ln.amount)||0;
+  const paid = parseFloat(ln.paid)||0;
+  const rem  = Math.max(0, amt - paid);
+  const rate = parseFloat(ln.rate)||0;
+  const moInt= Math.round(rem * rate / 12 / 100);
+  const remPct = amt>0 ? Math.min(100,Math.round((1-rem/amt)*100)) : 0;
+  const f = n => n.toLocaleString('th-TH');
+
+  // Balance
+  const balEl = document.getElementById('plbal-'+i);
+  if(balEl) balEl.textContent = f(rem)+' บาท';
+
+  // Progress bar
+  const progEl = document.getElementById('plprog-'+i);
+  if(progEl) {
+    progEl.innerHTML = amt>0
+      ? `<div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden"><div style="width:${remPct}%;height:100%;background:var(--green);border-radius:2px"></div></div><div style="font-size:10px;color:#9ca3af;margin-top:2px">คืนไปแล้ว ${remPct}%</div>`
+      : '';
+  }
+
+  // Interest box background
+  const intBox = document.getElementById('plint-box-'+i);
+  if(intBox) {
+    intBox.style.background = rate>0 ? 'var(--amber-lt)' : '#fff';
+    intBox.style.borderColor = rate>0 ? 'rgba(217,119,6,.3)' : 'var(--border)';
+  }
+
+  // Interest value
+  const intEl = document.getElementById('plint-'+i);
+  if(intEl) {
+    intEl.textContent = rate>0 ? f(moInt)+' บาท' : 'ยังไม่ระบุ';
+    intEl.style.color = rate>0 ? 'var(--amber)' : '#9ca3af';
+  }
+
+  // Interest formula
+  const frmEl = document.getElementById('plint-formula-'+i);
+  if(frmEl) frmEl.textContent = (rate>0&&rem>0) ? `${f(rem)} × ${rate}% ÷ 12` : '';
+
+  // Inputs — update only if not focused
+  const srcEl  = document.getElementById('plinput-src-'+i);
+  const amtEl  = document.getElementById('plinput-amt-'+i);
+  const paidEl = document.getElementById('plinput-paid-'+i);
+  const rateEl = document.getElementById('plinput-rate-'+i);
+  const ae = document.activeElement;
+  if(srcEl  && ae!==srcEl)  srcEl.value  = ln.source||'';
+  if(amtEl  && ae!==amtEl)  amtEl.value  = ln.amount||'';
+  if(paidEl && ae!==paidEl) paidEl.value = ln.paid||'';
+  if(rateEl && ae!==rateEl) rateEl.value = ln.rate||'';
+
+  recalcPool();
+  autoSave();
+}
+
+function renderPool() {
+  const ic = document.getElementById('pool-rows-inc');
+  const ec = document.getElementById('pool-rows-exp');
+  const lc = document.getElementById('pool-loan-rows');
+  if(ic) ic.innerHTML = (poolData.income||[]).map((r,i)=>poolRowHtml('income',i,r)).join('');
+  if(ec) ec.innerHTML = (poolData.expenses||[]).map((r,i)=>poolRowHtml('expenses',i,r)).join('');
+  if(lc) lc.innerHTML = (poolData.loans||[]).map((ln,j)=>poolLoanHtml(j,ln)).join('');
+  recalcPool();
+}
+
+function recalcPool() {
+  const ti = (poolData.income||[]).reduce((s,r)=>s+(parseFloat(r.amt)||0),0);
+  const te = (poolData.expenses||[]).reduce((s,r)=>s+(parseFloat(r.amt)||0),0);
+  const bal = ti - te;
+  const biEl=document.getElementById('pool-total-inc');
+  const beEl=document.getElementById('pool-total-exp');
+  const bbEl=document.getElementById('pool-balance');
+  if(biEl) biEl.textContent = ti.toLocaleString('th-TH');
+  if(beEl) beEl.textContent = te.toLocaleString('th-TH');
+  if(bbEl){
+    bbEl.textContent=(bal>=0?'+':'')+bal.toLocaleString('th-TH');
+    bbEl.style.color=bal>=0?'var(--green)':'var(--red)';
+  }
+}
+
+function addPoolRow(type) {
+  const today=new Date().toISOString().split('T')[0];
+  poolData[type].push({date:today,desc:'',amt:''});
+  renderPool(); autoSave();
+  const key=type==='income'?'inc':'exp';
+  const c=document.getElementById('pool-rows-'+key);
+  if(c) c.lastElementChild?.querySelector('input[type=text]')?.focus();
+}
+
+function delPoolRow(type, i) {
+  if(!confirm('ลบรายการนี้ใช่มั้ย?')) return;
+  poolData[type].splice(i,1); renderPool(); autoSave();
+}
+
+function poolUpdate(type, i, field, val) {
+  if(poolData[type]&&poolData[type][i]!=null) poolData[type][i][field]=val;
+  recalcPool(); autoSave();
+}
+
+function addPoolLoan() {
+  poolData.loans.push({source:'',amount:'',paid:'',rate:''});
+  renderPool(); autoSave();
+}
+
+function delPoolLoan(i) {
+  if(!confirm('ลบรายการกู้ยืมนี้ใช่มั้ย?')) return;
+  poolData.loans.splice(i,1); renderPool(); autoSave();
+}
+
+function poolLoanUpdate(i, field, val) {
+  if(poolData.loans&&poolData.loans[i]!=null) poolData.loans[i][field]=val;
+  updatePoolLoanDisplay(i);  // in-place, preserves focus
+}
+
+/* ═══════════════════════════════════════════════════════
+   LOAN DATA — แผนการกู้ (editable per-room)
+   ═══════════════════════════════════════════════════════ */
+const LOAN_KEY = 'thebase_loans_v1';
+let loanData = {
+  '203': { bank:'BBL', pct:80, amount:2606800, rate:2.4, monthly:10165, remaining:2606800, startDate:'', paidInstallments:0 },
+  '204': { bank:'UOB', pct:80, amount:2508000, rate:2.5, monthly:9910,  remaining:2508000, startDate:'', paidInstallments:0 },
+  '220': { bank:'SCB', pct:80, amount:2883810, rate:2.1, monthly:10804, remaining:2883810, startDate:'', paidInstallments:0 },
+  '221': { bank:'SCB', pct:70, amount:2523333, rate:2.1, monthly:9453,  remaining:2523333, startDate:'', paidInstallments:0 },
+};
+
+
+/* ─── Loan helpers ─── */
+function monthsElapsed(dateStr) {
+  if(!dateStr) return 0;
+  const s=new Date(dateStr), now=new Date();
+  const m=(now.getFullYear()-s.getFullYear())*12+(now.getMonth()-s.getMonth());
+  return Math.max(0, m);
+}
+
+// Standard amortisation: balance after n payments
+function calcLoanRemaining(id) {
+  const ln=loanData[id];
+  const P=parseFloat(ln.amount)||0;
+  const r=(parseFloat(ln.rate)||0)/12/100;   // monthly rate
+  const M=parseFloat(ln.monthly)||0;
+  const n=parseInt(ln.paidInstallments)||0;
+  if(P<=0||n<=0) return P;
+  if(r===0) return Math.max(0, P-M*n);
+  const f=Math.pow(1+r,n);
+  return Math.max(0, Math.round(P*f - M*(f-1)/r));
+}
+
+function renderLoanCards() {
+  const wrap=document.getElementById('loan-cards');
+  if(!wrap) return;
+  wrap.innerHTML=Object.keys(loanData).map(id=>{
+    const ln=loanData[id];
+    const rem=parseFloat(ln.remaining)||0;
+    const amt=parseFloat(ln.amount)||1;
+    const pct=Math.min(100,Math.max(0,Math.round((1-rem/amt)*100)));
+    return `<div class="loan-card">
+      <div class="loan-card-hdr" onclick="toggleLoanCard('${id}')">
+        <div class="loan-hdr-left">
+          <span class="loan-room-num">ห้อง ${id} — <span id="lbank-lbl-${id}">${ln.bank||'—'}</span></span>
+          <span class="loan-hdr-sub" id="lhdr-sub-${id}">${ln.pct||'—'}% | ${ln.rate||'—'}%/ปี | ผ่อน ${(parseFloat(ln.monthly)||0).toLocaleString('th-TH')} ฿/เดือน${ln.paidInstallments>0?' | ผ่อนไปแล้ว '+ln.paidInstallments+' งวด':''}</span>
+        </div>
+        <div class="loan-hdr-right">
+          <span class="loan-remaining-badge" id="lrem-badge-${id}">เหลือ ${rem.toLocaleString('th-TH')} ฿</span>
+          <span class="loan-chevron" id="lchev-${id}">▼</span>
+        </div>
+      </div>
+      <div class="loan-body" id="lbody-${id}">
+        <div class="loan-grid">
+          <div class="loan-field">
+            <label>ธนาคาร</label>
+            <select id="lbank-${id}" onchange="loanUpdate('${id}','bank',this.value)"
+              style="padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--gray);outline:none;background:#fff;width:100%;cursor:pointer">
+              <option value="">— เลือกธนาคาร —</option>
+              ${['BBL','KBank','SCB','KTB','BAY','UOB','CIMBT','TTB','LHFG','GSB','GHB','TMB'].map(b=>`<option value="${b}" ${ln.bank===b?'selected':''}>${b}</option>`).join('')}
+              <option value="อื่นๆ" ${ln.bank&&!['BBL','KBank','SCB','KTB','BAY','UOB','CIMBT','TTB','LHFG','GSB','GHB','TMB'].includes(ln.bank)?'selected':''}>อื่นๆ</option>
+            </select>
+          </div>
+          <div class="loan-field">
+            <label>LTV (%)</label>
+            <input type="number" step="1" min="0" max="100" value="${ln.pct||''}" placeholder="80"
+              oninput="loanUpdate('${id}','pct',this.value)">
+          </div>
+          <div class="loan-field">
+            <label>วงเงินกู้ (บาท)</label>
+            <input type="number" step="1" min="0" value="${ln.amount||''}"
+              oninput="loanUpdate('${id}','amount',this.value)">
+          </div>
+          <div class="loan-field">
+            <label>ดอกเบี้ย (%/ปี)</label>
+            <input type="number" step="0.01" min="0" value="${ln.rate||''}"
+              oninput="loanUpdate('${id}','rate',this.value)">
+          </div>
+          <div class="loan-field">
+            <label>ผ่อน/เดือน (บาท)</label>
+            <input type="number" step="1" min="0" value="${ln.monthly||''}"
+              oninput="loanUpdate('${id}','monthly',this.value)">
+          </div>
+          <div class="loan-field">
+            <label>วันเริ่มต้นผ่อน</label>
+            <input type="date" value="${ln.startDate||''}"
+              oninput="loanUpdate('${id}','startDate',this.value)"
+              style="text-align:left;padding:7px 8px;font-size:13px;font-weight:500">
+          </div>
+          <div class="loan-field">
+            <label>ผ่อนไปแล้ว (งวด) <span style="font-weight:400;color:#9ca3af">— คำนวณจากวันเริ่ม หรือใส่เอง</span></label>
+            <input type="number" step="1" min="0" id="linput-pi-${id}" value="${ln.paidInstallments||0}"
+              oninput="loanUpdate('${id}','paidInstallments',this.value)">
+          </div>
+          <div class="loan-field">
+            <label>หนี้คงเหลือ (คำนวณ) <span style="font-weight:400;color:var(--amber)">✦</span></label>
+            <input type="number" step="1" min="0" id="linput-rem-${id}"
+              value="${Math.round(parseFloat(ln.remaining)||0)}"
+              oninput="loanUpdate('${id}','remaining',this.value)"
+              style="color:var(--amber);border-color:rgba(217,119,6,.4);background:#fffbeb">
+          </div>
+        </div>
+        <div class="loan-progress-wrap">
+          <div class="loan-progress-bar">
+            <div class="loan-progress-fill" id="lprog-fill-${id}" style="width:${pct}%"></div>
+          </div>
+          <div class="loan-progress-label" id="lprog-lbl-${id}">
+            <span>ผ่อนไปแล้ว ${ln.paidInstallments||0} งวด (${pct}%)</span>
+            <span>คงเหลือ ${rem.toLocaleString('th-TH')} / ${amt.toLocaleString('th-TH')} บาท</span>
+          </div>
+        </div>
+        <div class="loan-net-row">
+          <span class="ln-label">💸 หนี้คงเหลือทั้งหมด</span>
+          <span class="ln-val" id="lnet-val-${id}">${rem.toLocaleString('th-TH')} บาท</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  renderLoanSummary();
+}
+
+function renderLoanSummary() {
+  const tbody=document.getElementById('loan-summary-body');
+  if(!tbody) return;
+  let totAmt=0,totRem=0,totMo=0;
+  const rows=Object.keys(loanData).map(id=>{
+    const ln=loanData[id];
+    const a=parseFloat(ln.amount)||0, r=parseFloat(ln.remaining)||0, m=parseFloat(ln.monthly)||0;
+    totAmt+=a; totRem+=r; totMo+=m;
+    return `<tr><td>${id}</td><td>${ln.bank||'—'}</td>
+      <td>${a.toLocaleString('th-TH')}</td>
+      <td style="color:var(--amber);font-weight:700">${r.toLocaleString('th-TH')}</td>
+      <td>${m.toLocaleString('th-TH')}</td></tr>`;
+  }).join('');
+  tbody.innerHTML=rows+`<tr class="total"><td>รวม</td><td>—</td>
+    <td>${totAmt.toLocaleString('th-TH')}</td>
+    <td style="color:var(--amber)">${totRem.toLocaleString('th-TH')}</td>
+    <td>${totMo.toLocaleString('th-TH')}</td></tr>`;
+}
+
+function toggleLoanCard(id) {
+  const body=document.getElementById('lbody-'+id);
+  const chev=document.getElementById('lchev-'+id);
+  if(!body) return;
+  const open=body.classList.toggle('open');
+  if(chev) chev.classList.toggle('open',open);
+}
+
+
+
+/* ─── Sync loanData.monthly → ROOMS.mortgage + all displays ─── */
+function syncLoanToRooms() {
+  Object.keys(loanData).forEach(id => {
+    const newMo = parseFloat(loanData[id].monthly)||0;
+    ROOMS[id].mortgage = newMo;
+  });
+  // Update total mortgage KPI
+  const totalMo = Object.keys(ROOMS).reduce((s,id)=>s+(ROOMS[id].mortgage||0),0);
+  const kpiEl = document.getElementById('kpi-mortgage');
+  if(kpiEl) kpiEl.textContent = fmt(totalMo);
+  // Update total mortgage in cashflow table
+  const tTotEl = document.getElementById('t-total-mort');
+  if(tTotEl) tTotEl.textContent = fmt(totalMo);
+  // Update per-room cf-mini labels and table cells
+  Object.keys(ROOMS).forEach(id => {
+    const mo = ROOMS[id].mortgage;
+    const lbl = document.getElementById('cf-label-'+id);
+    if(lbl) lbl.textContent = 'Net (เช่า − ผ่อน '+fmt(mo)+')';
+    const tMo = document.getElementById('t-mort-'+id);
+    if(tMo) tMo.textContent = fmt(mo);
+  });
+  // Re-calc all rooms and summary
+  Object.keys(ROOMS).forEach(id => updateRoom(id));
+  recalcSummary();
+}
+
+function updateLoanDisplay(id) {
+  const ln  = loanData[id];
+  const rem = parseFloat(ln.remaining)||0;
+  const amt = parseFloat(ln.amount)||0;
+  const pct = amt>0 ? Math.min(100,Math.max(0,Math.round((1-rem/amt)*100))) : 0;
+  const mo  = parseFloat(ln.monthly)||0;
+  const pi  = parseInt(ln.paidInstallments)||0;
+  const f   = n => n.toLocaleString('th-TH');
+
+  // Header bank label
+  const bankLbl=document.getElementById('lbank-lbl-'+id);
+  if(bankLbl) bankLbl.textContent=ln.bank||'—';
+
+  // Header badge
+  const badge=document.getElementById('lrem-badge-'+id);
+  if(badge) badge.textContent='เหลือ '+f(rem)+' ฿';
+
+  // Header subtitle (bank + LTV + rate + monthly)
+  const sub=document.getElementById('lhdr-sub-'+id);
+  if(sub) sub.textContent=`${ln.pct||'—'}% | ${ln.rate||'—'}%/ปี | ผ่อน ${f(mo)} ฿/เดือน${pi>0?' | ผ่อนไปแล้ว '+pi+' งวด':''}`;
+
+  // Progress fill
+  const fill=document.getElementById('lprog-fill-'+id);
+  if(fill) fill.style.width=pct+'%';
+
+  // Progress label
+  const lbl=document.getElementById('lprog-lbl-'+id);
+  if(lbl) lbl.innerHTML=`<span>ผ่อนไปแล้ว ${pi} งวด (${pct}%)</span><span>คงเหลือ ${f(rem)} / ${f(amt)} บาท</span>`;
+
+  // Net val
+  const netv=document.getElementById('lnet-val-'+id);
+  if(netv) netv.textContent=f(rem)+' บาท';
+
+  // Computed remaining input — update only if user isn't typing in it
+  const remEl=document.getElementById('linput-rem-'+id);
+  if(remEl && document.activeElement!==remEl) remEl.value=Math.round(rem)||'';
+
+  // paidInstallments input — update only if auto-computed (startDate changed)
+  const piEl=document.getElementById('linput-pi-'+id);
+  if(piEl && document.activeElement!==piEl) piEl.value=pi;
+
+  // Summary table
+  renderLoanSummary();
+  // Sync mortgage payments to overview/cashflow
+  syncLoanToRooms();
+}
+
+function loanUpdate(id, field, val) {
+  loanData[id][field] = (field==='paidInstallments') ? (parseInt(val)||0) : val;
+  // startDate → auto-fill paidInstallments count
+  if(field==='startDate') {
+    loanData[id].paidInstallments = monthsElapsed(val);
+  }
+  // Auto-compute remaining (except when user edits remaining directly)
+  if(field !== 'remaining') {
+    loanData[id].remaining = calcLoanRemaining(id);
+  }
+  updateLoanDisplay(id);  // ← patch in-place, no full re-render
+  autoSave();
+}
+
+/* ─── Save / Load / Reset ─── */
+/* ════════════════════════════════════════════════════
+   GOOGLE APPS SCRIPT CONFIG — วาง URL ที่นี่หลัง deploy
+   ════════════════════════════════════════════════════ */
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby9R8dGJCV2FjM9Nt4RRV7WCV0qa4QTHstOEgZX4wxXuuQNo70PlzwRqAdJ91tdPFEdWQ/exec';
+
+let saveTimer = null;
+
+function setSyncStatus(state, msg) {
+  const el = document.getElementById('sync-status');
+  const lbl = document.getElementById('sync-label');
+  if(!el||!lbl) return;
+  el.className = 'sync-bar ' + state;
+  lbl.textContent = msg;
+}
+
+function bundleAll() {
+  const rooms = {};
+  Object.keys(ROOMS).forEach(id => {
+    rooms[id] = {
+      rented: document.getElementById('toggle-'+id).checked,
+      rent:   document.getElementById('rent-'+id).value
+    };
+  });
+  return { rooms, extras: extraData, pool: poolData, loans: loanData, tenants: tenantData };
+}
+
+function applyBundle(d) {
+  // rooms
+  if(d.rooms) Object.keys(ROOMS).forEach(id => {
+    if(d.rooms[id]) {
+      document.getElementById('toggle-'+id).checked = d.rooms[id].rented||false;
+      document.getElementById('rent-'+id).value     = d.rooms[id].rent||'';
+    }
+  });
+  // extras
+  if(d.extras) Object.keys(extraData).forEach(id => { if(d.extras[id]) extraData[id]=d.extras[id]; });
+  // pool
+  if(d.pool) ['income','expenses','loans'].forEach(k => { if(d.pool[k]) poolData[k]=d.pool[k]; });
+  // tenants
+  if(d.tenants) Object.keys(tenantData).forEach(id => { if(d.tenants[id]) Object.assign(tenantData[id],d.tenants[id]); });
+  // loans
+  if(d.loans) Object.keys(loanData).forEach(id => { if(d.loans[id]) Object.assign(loanData[id],d.loans[id]); });
+}
+
+function autoSave() {
+  // Cache locally first
+  const bundle = bundleAll();
+  try { localStorage.setItem('thebase_sheets_bundle', JSON.stringify(bundle)); } catch(e){}
+  // Debounce Sheets write
+  if(!SCRIPT_URL) return;
+  clearTimeout(saveTimer);
+  setSyncStatus('ing', 'กำลังบันทึก...');
+  saveTimer = setTimeout(() => {
+    fetch(SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      body: JSON.stringify(bundle)
+    })
+    .then(() => setSyncStatus('ok', 'บันทึกแล้ว ✓'))
+    .catch(() => setSyncStatus('err', 'บันทึกไม่สำเร็จ'));
+  }, 1000);
+}
+
+function saveData() { autoSave(); }
+
+function loadData() {
+  // 1. Load from localStorage cache immediately (fast)
+  const cached = localStorage.getItem('thebase_sheets_bundle');
+  if(cached) {
+    try { applyBundle(JSON.parse(cached)); } catch(e){}
+  }
+  // Render everything
+  Object.keys(ROOMS).forEach(id=>{ renderRows(id); recalcX(id); updateRoom(id); });
+  renderPool();
+  Object.keys(tenantData).forEach(id=>loadTenantFields(id));
+  renderDepositKpi();
+  renderLoanCards();
+  syncLoanToRooms();
+
+  // 2. Fetch fresh data from Google Sheets
+  if(!SCRIPT_URL) {
+    document.getElementById('sheets-setup-banner').style.display = 'block';
+    setSyncStatus('err', 'ยังไม่ได้ตั้งค่า');
+    return;
+  }
+  setSyncStatus('ing', 'กำลังโหลด...');
+  fetch(SCRIPT_URL)
+    .then(r => r.json())
+    .then(d => {
+      if(d && d.rooms) {
+        applyBundle(d);
+        try { localStorage.setItem('thebase_sheets_bundle', JSON.stringify(d)); } catch(e){}
+        Object.keys(ROOMS).forEach(id=>{ renderRows(id); recalcX(id); updateRoom(id); });
+        renderPool();
+        Object.keys(tenantData).forEach(id=>loadTenantFields(id));
+        renderDepositKpi();
+        renderLoanCards();
+        syncLoanToRooms();
+      }
+      setSyncStatus('ok', 'โหลดแล้ว ✓');
+    })
+    .catch(() => setSyncStatus('err', 'โหลดไม่สำเร็จ'));
+}
+
+function resetData() {
+  if(!confirm('รีเซ็ตข้อมูลทั้งหมดใช่มั้ย?')) return;
+  localStorage.removeItem('thebase_rooms');
+  localStorage.removeItem(EXTRA_KEY);
+  Object.keys(ROOMS).forEach(id=>{
+    document.getElementById('toggle-'+id).checked=false;
+    document.getElementById('rent-'+id).value='';
+    extraData[id]={ income:[], expenses:[{desc:'ค่าส่วนกลาง',amt:''}] };
+    renderRows(id); recalcX(id); updateRoom(id);
+  });
+  // Reset tenants
+  localStorage.removeItem(TENANT_KEY);
+  Object.keys(tenantData).forEach(id=>{ tenantData[id]={name:'',phone:'',movein:'',expiry:'',deposit:''}; loadTenantFields(id); });
+  renderDepositKpi();
+  // Reset pool
+  localStorage.removeItem(POOL_KEY);
+  poolData = { income:[], expenses:[], loans:[] };
+  renderPool();
+  // Reset loans
+  localStorage.removeItem(LOAN_KEY);
+  loanData = {
+    '203': { bank:'BBL', pct:80, amount:2606800, rate:2.4, monthly:10165, remaining:2606800, startDate:'', paidInstallments:0 },
+    '204': { bank:'UOB', pct:80, amount:2508000, rate:2.5, monthly:9910,  remaining:2508000, startDate:'', paidInstallments:0 },
+    '220': { bank:'SCB', pct:80, amount:2883810, rate:2.1, monthly:10804, remaining:2883810, startDate:'', paidInstallments:0 },
+    '221': { bank:'SCB', pct:70, amount:2523333, rate:2.1, monthly:9453,  remaining:2523333, startDate:'', paidInstallments:0 },
+  };
+  renderLoanCards();
+  syncLoanToRooms();
+}
+
+/* ─── Navigation ─── */
+function navTo(page, el) {
+  document.querySelectorAll('.nav-item,.mob-nav-item').forEach(e => e.classList.remove('active'));
+  document.querySelectorAll('[data-page="'+page+'"]').forEach(e => e.classList.add('active'));
+  document.querySelectorAll('.page').forEach(p => { p.classList.remove('active'); p.style.display='none'; });
+  const pg = document.getElementById('page-'+page);
+  if(pg) { pg.style.display='block'; pg.classList.add('active'); }
+}
+
+// Init
+loadData();
+recalcSummary();
+// Show first page
+document.getElementById('page-overview').style.display='block';
+document.getElementById('page-overview').classList.add('active');
+
+</script>
+</body>
+</html>
