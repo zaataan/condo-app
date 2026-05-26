@@ -656,8 +656,18 @@
       <div id="tb-profile-list-auth" style="width:100%;display:flex;flex-direction:column;gap:8px;max-height:220px;overflow-y:auto"></div>
       <div id="tb-no-profile-msg" style="display:none;font-size:13px;color:#9ca3af;text-align:center;padding:6px 0">ยังไม่มี profile — สร้างใหม่เลย</div>
       <div class="auth-err" id="profile-err"></div>
-      <!-- hidden input เพื่อ backward compat -->
-      <input type="text" id="profile-input" style="display:none" autocomplete="off">
+      <!-- พิมพ์ชื่อ profile (สำหรับเครื่องใหม่ / แชร์กับคนอื่น) -->
+      <div style="width:100%;margin-top:4px">
+        <div style="font-size:11px;color:#9ca3af;text-align:center;margin-bottom:6px">หรือพิมพ์ชื่อ profile ที่รู้จัก</div>
+        <div style="display:flex;gap:8px;width:100%">
+          <input type="text" id="profile-input" autocomplete="off" spellcheck="false"
+            placeholder="ชื่อ profile เช่น zaataan"
+            style="flex:1;padding:10px 12px;border:2px solid #e5e7eb;border-radius:10px;font-size:14px;outline:none;color:#1f2937"
+            onfocus="this.style.borderColor='#1a6fc4'"
+            onblur="this.style.borderColor='#e5e7eb'">
+          <button onclick="submitProfile()" style="padding:10px 14px;background:#1a6fc4;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap">เข้า</button>
+        </div>
+      </div>
       <div class="auth-divider">หรือ</div>
       <button class="auth-btn purple" onclick="showAuthScreen('create')">+ สร้าง Profile ใหม่</button>
       <button class="auth-link-btn" onclick="tbSignOut()" style="margin-top:8px">ออกจาก Google</button>
