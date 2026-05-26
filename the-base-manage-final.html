@@ -2138,7 +2138,10 @@ function autoSave() {
   clearTimeout(saveTimer);
   saveTimer = setTimeout(() => {
     setTBSyncStatus('saving');
-    fetch(SCRIPT_URL, { method:'POST', mode:'no-cors', body: JSON.stringify(bundle) })
+    const _pr2 = getProfiles();
+    const _pin2 = _pr2[_profile] ? _pr2[_profile].pin : null;
+    const bundleWithPin = _pin2 ? Object.assign({}, bundle, { pin: _pin2 }) : bundle;
+    fetch(SCRIPT_URL, { method:'POST', mode:'no-cors', body: JSON.stringify(bundleWithPin) })
       .then(() => setTBSyncStatus('synced'))
       .catch(e => { console.error('[TB Sync] save error:', e); setTBSyncStatus('error'); });
   }, 800);
@@ -2177,7 +2180,13 @@ function loadData() {
     .then(r => r.json())
     .then(d => {
       if(d && d.rooms) {
-        // เจอข้อมูลที่ path ใหม่ — ใช้เลย
+        // sync PIN จาก cloud กลับมา cache ใน localStorage
+        if(d.pin) {
+          const _pr = getProfiles();
+          if(!_pr[_profile]) _pr[_profile] = {};
+          _pr[_profile].pin = d.pin;
+          saveProfiles(_pr);
+        }
         applyAndRerender(d);
         setTBSyncStatus('synced');
       } else {
@@ -2360,16 +2369,43 @@ function submitProfile() {
   const profiles = getProfiles();
   if(profiles[name]) {
     _profile = name;
-    // ✅ ถ้า unlock ยังอยู่ภายใน 24 ชม. ข้าม PIN ได้เลย
-    if(isTBUnlocked(name)) {
-      saveTBSession(); launchApp(); return;
-    }
+    if(isTBUnlocked(name)) { saveTBSession(); launchApp(); return; }
     document.getElementById('pin-profile-label').textContent = name;
-    _pinBuf  = '';
-    buildPinPad();
-    updatePinDots();
+    _pinBuf = ''; buildPinPad(); updatePinDots();
     document.getElementById('pin-err').style.display = 'none';
     showAuthScreen('pin');
+  } else if(SCRIPT_URL) {
+    // ไม่เจอใน localStorage → ลอง fetch จาก cloud (เช่น เครื่องใหม่ / แฟน)
+    errEl.textContent = '🔄 กำลังตรวจสอบ...'; errEl.style.display = 'block';
+    errEl.style.color = '#6b7280';
+    fetch(SCRIPT_URL + '?path=thebase_' + name)
+      .then(r => r.json())
+      .then(d => {
+        errEl.style.color = '#dc2626';
+        if(d && d.rooms) {
+          _profile = name;
+          const pin = d.pin || null;
+          profiles[name] = { pin, fromCloud: true };
+          saveProfiles(profiles);
+          if(pin) {
+            document.getElementById('pin-profile-label').textContent = name;
+            _pinBuf = ''; buildPinPad(); updatePinDots();
+            document.getElementById('pin-err').style.display = 'none';
+            errEl.style.display = 'none';
+            showAuthScreen('pin');
+          } else {
+            saveTBSession(); launchApp();
+          }
+        } else {
+          errEl.textContent = '❌ ไม่พบ profile "' + name + '"';
+          errEl.style.display = 'block';
+        }
+      })
+      .catch(() => {
+        errEl.style.color = '#dc2626';
+        errEl.textContent = '❌ ไม่พบ profile "' + name + '" (เชื่อมต่อไม่ได้)';
+        errEl.style.display = 'block';
+      });
   } else {
     errEl.textContent    = '❌ ไม่พบ profile "' + name + '"';
     errEl.style.display  = 'block';

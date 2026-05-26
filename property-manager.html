@@ -752,7 +752,9 @@ function save() {
   clearTimeout(saveTimer);
   saveTimer = setTimeout(() => {
     setPMSyncStatus('saving');
-    const payload = Object.assign({ path: pmProfilePath() }, app);
+    const _profiles = getPMProfiles();
+    const _pin = _profiles[_pmProfile] ? _profiles[_pmProfile].pin : null;
+    const payload = Object.assign({ path: pmProfilePath() }, app, _pin ? { pin: _pin } : {});
     fetch(SCRIPT_URL, { method:'POST', mode:'no-cors', body: JSON.stringify(payload) })
       .then(() => setPMSyncStatus('synced'))
       .catch(e => { console.error('[PM Sync] save error:', e); setPMSyncStatus('error'); });
@@ -774,6 +776,13 @@ function load() {
     .then(r => r.json())
     .then(d => {
       if(d && d.props) {
+        // sync PIN จาก cloud กลับมา cache ใน localStorage
+        if(d.pin) {
+          const _pr = getPMProfiles();
+          if(!_pr[_pmProfile]) _pr[_pmProfile] = {};
+          _pr[_pmProfile].pin = d.pin;
+          savePMProfiles(_pr);
+        }
         applyAndRender(d);
         setPMSyncStatus('synced');
       } else {
@@ -1761,18 +1770,48 @@ function submitProfile() {
   const profiles = getPMProfiles();
   if(profiles[name]) {
     _pmProfile = name;
-    // ✅ ถ้า unlock ยังอยู่ภายใน 24 ชม. ข้าม PIN ได้เลย
-    if(isPMUnlocked(name)) {
-      savePMSession(); pmLaunchApp(); return;
-    }
+    if(isPMUnlocked(name)) { savePMSession(); pmLaunchApp(); return; }
     document.getElementById('pin-profile-label').textContent = name;
-    _pmPinBuf  = '';
-    buildPinPad();
-    updatePinDots();
+    _pmPinBuf  = ''; buildPinPad(); updatePinDots();
     document.getElementById('pin-err').style.display = 'none';
     showAuthScreen('pin');
+  } else if(SCRIPT_URL) {
+    // ไม่เจอใน localStorage → ลอง fetch จาก cloud (เช่น เครื่องใหม่ / แฟน)
+    errEl.textContent = '🔄 กำลังตรวจสอบ...'; errEl.style.display = 'block';
+    errEl.style.color = '#6b7280';
+    fetch(SCRIPT_URL + '?path=propmanager_' + name)
+      .then(r => r.json())
+      .then(d => {
+        errEl.style.color = '#dc2626';
+        if(d && d.props) {
+          // เจอ profile ใน cloud
+          _pmProfile = name;
+          const pin = d.pin || null;
+          profiles[name] = { pin, fromCloud: true };
+          savePMProfiles(profiles);
+          if(pin) {
+            // มี PIN → ขอ PIN
+            document.getElementById('pin-profile-label').textContent = name;
+            _pmPinBuf = ''; buildPinPad(); updatePinDots();
+            document.getElementById('pin-err').style.display = 'none';
+            errEl.style.display = 'none';
+            showAuthScreen('pin');
+          } else {
+            // ไม่มี PIN → เข้าได้เลย
+            savePMSession(); pmLaunchApp();
+          }
+        } else {
+          errEl.textContent = '❌ ไม่พบ profile "' + name + '"';
+          errEl.style.display = 'block';
+        }
+      })
+      .catch(() => {
+        errEl.style.color = '#dc2626';
+        errEl.textContent = '❌ ไม่พบ profile "' + name + '" (เชื่อมต่อไม่ได้)';
+        errEl.style.display = 'block';
+      });
   } else {
-    errEl.textContent   = '❌ ไม่พบ profile "' + name + '"';
+    errEl.textContent = '❌ ไม่พบ profile "' + name + '"';
     errEl.style.display = 'block';
   }
 }
