@@ -6,87 +6,81 @@
 <title>Property Manager — จัดการอสังหาริมทรัพย์</title>
 <style>
 :root {
-  --blue:#6366f1; --blue-lt:#eef2ff;
-  --teal:#0d9488; --teal-lt:#f0fdfa;
-  --green:#16a34a; --green-lt:#f0fdf4;
-  --amber:#d97706; --amber-lt:#fffbeb;
-  --red:#dc2626;   --red-lt:#fef2f2;
-  --purple:#7c3aed; --purple-lt:#f5f3ff;
-  --gray:#1e293b; --gray-lt:#f8fafc;
-  --border:#e2e8f0;
-  --radius:14px; --shadow:0 1px 3px rgba(0,0,0,.05),0 4px 16px rgba(0,0,0,.06);
+  --blue:#007aff; --blue-lt:rgba(0,122,255,.10);
+  --teal:#32ade6; --teal-lt:rgba(50,173,230,.12);
+  --green:#34c759; --green-lt:rgba(52,199,89,.12);
+  --amber:#ff9500; --amber-lt:rgba(255,149,0,.12);
+  --red:#ff3b30;   --red-lt:rgba(255,59,48,.12);
+  --purple:#af52de; --purple-lt:rgba(175,82,222,.12);
+  --gray:#1d1d1f; --gray-lt:#f5f5f7;
+  --border:rgba(0,0,0,.08);
+  --radius:14px; --shadow:0 2px 12px rgba(0,0,0,.08),0 0 1px rgba(0,0,0,.05);
   --sidebar-w:220px;
 }
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f8fafc;color:var(--gray);min-height:100vh}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-serif;background:#f5f5f7;color:var(--gray);min-height:100vh;-webkit-font-smoothing:antialiased}
 
 /* ── TOP BAR ── */
 .topbar{
-  position:fixed;top:0;left:0;right:0;height:56px;
-  background:#fff;border-bottom:1px solid var(--border);
-  box-shadow:0 1px 8px rgba(99,102,241,.06);
+  position:fixed;top:0;left:0;right:0;height:52px;
+  background:rgba(255,255,255,.82);
+  backdrop-filter:blur(20px) saturate(180%);
+  -webkit-backdrop-filter:blur(20px) saturate(180%);
+  border-bottom:.5px solid rgba(0,0,0,.1);
   display:flex;align-items:center;gap:10px;padding:0 20px;z-index:100;
 }
-.topbar-logo{font-size:16px;font-weight:800;color:var(--blue);letter-spacing:-.3px}
-.topbar-sub{font-size:11px;color:#9ca3af;flex:1}
+.topbar-logo{font-size:15px;font-weight:600;color:var(--gray);letter-spacing:-.2px}
+.topbar-sub{font-size:11px;color:#aeaeb2;flex:1}
 .prop-selector{
   display:flex;align-items:center;gap:6px;flex:1;
-  padding:6px 10px;background:var(--gray-lt);border:1.5px solid var(--border);
-  border-radius:10px;cursor:pointer;font-size:13px;font-weight:600;
-  transition:border-color .15s;
+  padding:6px 10px;background:rgba(0,0,0,.05);border:none;
+  border-radius:10px;cursor:pointer;font-size:13px;font-weight:500;
+  transition:background .15s;
 }
-.prop-selector:hover{border-color:var(--blue)}
+.prop-selector:hover{background:rgba(0,0,0,.08)}
 .prop-selector select{
-  border:none;background:transparent;font-size:13px;font-weight:600;
+  border:none;background:transparent;font-size:13px;font-weight:500;
   color:var(--gray);outline:none;cursor:pointer;flex:1
 }
 
 /* ── SIDEBAR ── */
 .sidebar{
-  position:fixed;top:56px;left:0;bottom:0;width:var(--sidebar-w);
-  background:linear-gradient(180deg,#f5f3ff 0%,#f8fafc 60%);
-  border-right:1px solid #e8e6f8;
-  overflow-y:auto;z-index:90;padding:16px 0 20px;
+  position:fixed;top:52px;left:0;bottom:0;width:var(--sidebar-w);
+  background:rgba(247,247,247,.95);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-right:.5px solid rgba(0,0,0,.1);
+  overflow-y:auto;z-index:90;padding:12px 0;
 }
-.sidebar-brand{font-size:10px;font-weight:700;color:#a5b4fc;text-transform:uppercase;letter-spacing:1px;padding:0 18px 10px}
+.sidebar-brand{font-size:11px;font-weight:500;color:#aeaeb2;padding:0 16px 8px;letter-spacing:.1px}
 .nav-item{
-  display:flex;align-items:center;gap:8px;padding:9px 16px;
-  font-size:13px;font-weight:500;color:#6b7280;cursor:pointer;
-  border-left:3px solid transparent;
-  transition:all .15s;
+  display:flex;align-items:center;gap:8px;padding:7px 12px;margin:1px 8px;
+  font-size:13px;font-weight:400;color:#6e6e73;cursor:pointer;
+  border-radius:8px;transition:all .12s;
 }
-.nav-item:hover{background:rgba(99,102,241,.06);color:var(--blue)}
-.nav-item.active{
-  background:linear-gradient(90deg,rgba(99,102,241,.12) 0%,transparent 100%);
-  color:var(--blue);font-weight:700;
-  border-left-color:var(--blue);
-  box-shadow:inset 0 1px 0 rgba(99,102,241,.08),inset 0 -1px 0 rgba(99,102,241,.08);
-}
-.nav-item .ni-icon{font-size:16px;width:20px;text-align:center}
-.nav-sep{height:1px;background:var(--border);margin:8px 14px}
-.nav-group-label{font-size:10px;font-weight:700;color:#9ca3af;padding:6px 20px 2px;text-transform:uppercase;letter-spacing:.5px}
+.nav-item:hover{background:rgba(0,0,0,.04);color:var(--gray)}
+.nav-item.active{background:var(--blue-lt);color:var(--blue);font-weight:600}
+.nav-item .ni-icon{font-size:15px;width:20px;text-align:center}
+.nav-sep{height:.5px;background:rgba(0,0,0,.07);margin:6px 16px}
+.nav-group-label{font-size:10px;font-weight:600;color:#aeaeb2;padding:6px 16px 2px;text-transform:uppercase;letter-spacing:.4px}
 
 /* ── MAIN ── */
-.main{margin-top:56px;margin-left:var(--sidebar-w);padding:24px;min-height:calc(100vh - 56px)}
+.main{margin-top:52px;margin-left:var(--sidebar-w);padding:24px;min-height:calc(100vh - 52px);background:#f5f5f7}
 .page{display:none}
-.page.active{display:block;max-width:960px}
-.page-title{font-size:18px;font-weight:800;color:var(--gray);margin-bottom:20px;letter-spacing:-.3px}
+.page.active{display:block;max-width:900px}
+.page-title{font-size:20px;font-weight:700;color:var(--gray);margin-bottom:20px;letter-spacing:-.3px}
 
 /* ── CARDS ── */
-.card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:14px;margin-bottom:12px}
-.card-title{font-size:14px;font-weight:700;color:var(--gray);margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;margin-bottom:12px}
+.card-title{font-size:14px;font-weight:600;color:var(--gray);margin-bottom:12px;display:flex;align-items:center;gap:6px}
 
 /* ── KPI ROW ── */
 .kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px}
-.kpi{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:14px 16px;border-top:3px solid var(--border);transition:transform .15s,box-shadow .15s}
-.kpi:hover{transform:translateY(-2px);box-shadow:0 4px 20px rgba(0,0,0,.09)}
-.kpi.accent-green{border-top-color:var(--green)}
-.kpi.accent-blue{border-top-color:var(--blue)}
-.kpi.accent-amber{border-top-color:var(--amber)}
-.kpi.accent-teal{border-top-color:var(--teal)}
-.kpi .label{font-size:10px;color:#9ca3af;font-weight:700;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
-.kpi .number{font-size:22px;font-weight:800;line-height:1.1}
-.kpi .sub{font-size:11px;color:#9ca3af;margin-top:4px}
+.kpi{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;transition:transform .15s,box-shadow .15s}
+.kpi:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(0,0,0,.1)}
+.kpi.accent-green,.kpi.accent-blue,.kpi.accent-amber,.kpi.accent-teal{border-top:none}
+.kpi .label{font-size:11px;color:#aeaeb2;font-weight:500;margin-bottom:6px;text-transform:uppercase;letter-spacing:.3px}
+.kpi .number{font-size:24px;font-weight:700;line-height:1.1;letter-spacing:-.4px}
+.kpi .sub{font-size:12px;color:#aeaeb2;margin-top:4px}
 
 /* ── BUTTONS ── */
 .btn{display:inline-flex;align-items:center;gap:5px;padding:7px 13px;border-radius:9px;
@@ -316,68 +310,59 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 /* ── AUTH SYSTEM ── */
 #auth-overlay{
   position:fixed;inset:0;z-index:9999;
-  background:linear-gradient(135deg,#312e81 0%,#4f46e5 55%,#818cf8 100%);
-  display:flex;align-items:center;justify-content:center;
+  background:#f5f5f7;
+  display:flex;align-items:center;justify-content:center;padding:24px;
 }
 .auth-card{
-  background:#fff;border-radius:20px;padding:32px 24px;
-  width:min(340px,92vw);text-align:center;
-  box-shadow:0 20px 60px rgba(0,0,0,.25);
+  width:min(320px,92vw);text-align:center;
 }
 .auth-screen{display:none}.auth-screen.active{display:block}
-.auth-logo{font-size:48px;margin-bottom:6px}
-.auth-title{font-size:20px;font-weight:800;color:#4f46e5;margin-bottom:4px}
-.auth-sub{font-size:13px;color:#6b7280;margin-bottom:18px;line-height:1.5}
-.auth-err{font-size:12px;color:#dc2626;margin-top:10px;padding:8px 10px;
-  background:#fee2e2;border-radius:8px;display:none}
-.auth-loading{font-size:13px;color:#9ca3af;margin-top:12px}
+.auth-logo{
+  width:80px;height:80px;border-radius:22px;margin:0 auto 14px;
+  background:linear-gradient(145deg,#1a8fff,#5ac8fa);
+  display:flex;align-items:center;justify-content:center;font-size:38px;
+  box-shadow:0 6px 24px rgba(0,122,255,.28);
+}
+.auth-title{font-size:24px;font-weight:700;color:#1d1d1f;margin-bottom:4px;letter-spacing:-.4px}
+.auth-sub{font-size:14px;color:#6e6e73;margin-bottom:24px}
+.auth-err{font-size:13px;color:#ff3b30;margin-top:8px;display:none}
+.auth-loading{font-size:13px;color:#aeaeb2;margin-top:12px}
 .auth-input{
-  width:100%;padding:11px 14px;border:1.5px solid #e5e7eb;border-radius:10px;
-  font-size:14px;outline:none;margin-bottom:10px;text-align:center;
-  transition:border-color .2s;font-family:inherit;
+  width:100%;padding:12px 14px;border:1px solid rgba(0,0,0,.12);border-radius:10px;
+  font-size:16px;outline:none;margin-bottom:10px;background:#fff;color:#1d1d1f;
+  transition:border-color .15s,box-shadow .15s;font-family:inherit;-webkit-appearance:none;
 }
-.auth-input:focus{border-color:#6366f1}
+.auth-input:focus{border-color:#007aff;box-shadow:0 0 0 3px rgba(0,122,255,.12)}
 .auth-btn{
-  width:100%;padding:12px;background:#6366f1;color:#fff;border:none;
-  border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;
-  margin-bottom:8px;font-family:inherit;transition:background .2s;
+  width:100%;padding:14px;background:#007aff;color:#fff;border:none;
+  border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;
+  margin-bottom:8px;font-family:inherit;transition:opacity .15s;
 }
-.auth-btn:hover{background:#4f46e5}
-.auth-btn.purple{background:#7c3aed}
-.auth-btn.purple:hover{background:#6d28d9}
+.auth-btn:hover{opacity:.88}
+.auth-btn.purple{background:#af52de}
 .auth-link-btn{
-  background:none;border:none;color:#6b7280;font-size:12px;
-  cursor:pointer;padding:4px 8px;font-family:inherit;
+  background:none;border:none;color:#007aff;font-size:14px;
+  cursor:pointer;padding:4px 8px;font-family:inherit;font-weight:500;
 }
-.auth-link-btn:hover{color:#374151}
-.auth-user-badge{
-  display:flex;align-items:center;gap:8px;background:#f3f4f6;
-  border-radius:10px;padding:8px 12px;margin-bottom:14px;
-  font-size:13px;color:#374151;text-align:left;
-}
-.auth-user-badge img{width:24px;height:24px;border-radius:50%;background:#e5e7eb;flex-shrink:0}
-.auth-divider{display:flex;align-items:center;gap:8px;margin:10px 0;color:#9ca3af;font-size:12px}
-.auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:#e5e7eb}
-.pin-dots{display:flex;gap:12px;justify-content:center;margin:16px 0}
-.pin-dot{width:13px;height:13px;border-radius:50%;background:#e5e7eb;
-  border:2px solid #d1d5db;transition:all .15s}
-.pin-dot.filled{background:#6366f1;border-color:#6366f1;transform:scale(1.1)}
-.pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.auth-user-badge{display:none}
+.auth-divider{display:none}
+.pin-dots{display:flex;gap:14px;justify-content:center;margin:28px 0}
+.pin-dot{width:13px;height:13px;border-radius:50%;background:rgba(0,0,0,.18);
+  transition:all .2s cubic-bezier(.34,1.56,.64,1)}
+.pin-dot.filled{background:#1d1d1f;transform:scale(1.2)}
+.pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px}
 .pin-key{
-  padding:13px 8px;background:#f9fafb;border:1.5px solid #e5e7eb;
-  border-radius:10px;font-size:18px;font-weight:700;cursor:pointer;
-  user-select:none;transition:all .1s;color:#374151;font-family:inherit;
+  aspect-ratio:1;border-radius:50%;border:none;
+  background:rgba(0,0,0,.07);
+  font-size:24px;font-weight:300;cursor:pointer;user-select:none;
+  display:flex;align-items:center;justify-content:center;
+  transition:background .1s;color:#1d1d1f;font-family:inherit;
 }
-.pin-key:active{background:#e5e7eb;transform:scale(.95)}
-.pin-key.del,.pin-key.cancel{font-size:13px;color:#6b7280;font-weight:500}
-.user-pill{
-  display:flex;align-items:center;gap:6px;cursor:pointer;
-  background:rgba(255,255,255,.18);border-radius:20px;
-  padding:3px 10px 3px 3px;flex-shrink:0;
-}
-.user-avatar{width:26px;height:26px;border-radius:50%;object-fit:cover;background:#e5e7eb}
-.user-name{font-size:12px;font-weight:600;color:#fff;max-width:110px;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pin-key:active{background:rgba(0,0,0,.18)}
+.pin-key.del,.pin-key.cancel{font-size:14px;color:#6e6e73;font-weight:500;background:transparent}
+.user-pill{display:none}
+.user-avatar{display:none}
+.user-name{display:none}
 </style>
 </head>
 <body>
@@ -389,30 +374,21 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <div id="auth-s2" class="auth-screen active">
       <div class="auth-logo">🏢</div>
       <div class="auth-title">Property Manager</div>
-      <div class="auth-sub" style="margin-bottom:12px">เลือกหรือพิมพ์ชื่อ profile</div>
-      <!-- รายชื่อ profiles -->
-      <div id="pm-profile-list-auth" style="width:100%;display:flex;flex-direction:column;gap:8px;max-height:200px;overflow-y:auto"></div>
-      <div id="pm-no-profile-msg" style="display:none;font-size:13px;color:#9ca3af;text-align:center;padding:6px 0">ยังไม่มี profile — สร้างใหม่เลย</div>
+      <div class="auth-sub">ใส่ชื่อ profile เพื่อเข้าใช้งาน</div>
+      <div id="pm-profile-list-auth" style="width:100%;display:flex;flex-direction:column;gap:6px;max-height:180px;overflow-y:auto;margin-bottom:10px"></div>
+      <div id="pm-no-profile-msg" style="display:none;font-size:13px;color:#aeaeb2;text-align:center;padding:6px 0">ยังไม่มี profile — สร้างใหม่เลย</div>
       <div class="auth-err" id="profile-err"></div>
-      <div style="width:100%;margin-top:8px">
-        <div style="font-size:11px;color:#9ca3af;text-align:center;margin-bottom:6px">หรือพิมพ์ชื่อ profile ที่รู้จัก</div>
-        <div style="display:flex;gap:8px;width:100%">
-          <input type="text" id="profile-input" autocomplete="off" spellcheck="false"
-            placeholder="พิมพ์ชื่อ profile"
-            style="flex:1;padding:10px 12px;border:2px solid #e2e8f0;border-radius:10px;font-size:14px;outline:none;color:#1e293b"
-            onfocus="this.style.borderColor='#6366f1'"
-            onblur="this.style.borderColor='#e2e8f0'">
-          <button onclick="submitProfile()" style="padding:10px 14px;background:#6366f1;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap">เข้า</button>
-        </div>
-      </div>
-      <div class="auth-divider">หรือ</div>
-      <button class="auth-btn purple" onclick="showAuthScreen('create')">+ สร้าง Profile ใหม่</button>
+      <input type="text" id="profile-input" class="auth-input" autocomplete="off" spellcheck="false"
+        placeholder="พิมพ์ชื่อ profile"
+        onkeydown="if(event.key==='Enter')submitProfile()">
+      <button class="auth-btn" onclick="submitProfile()">ถัดไป</button>
+      <button class="auth-link-btn" onclick="showAuthScreen('create')" style="margin-top:12px;display:block;width:100%">+ สร้าง Profile ใหม่</button>
     </div>
     <!-- S3: PIN -->
     <div id="auth-s3" class="auth-screen">
       <div class="auth-logo">🔐</div>
-      <div class="auth-title">ใส่ PIN</div>
-      <div class="auth-sub">profile: <strong id="pin-profile-label"></strong></div>
+      <div class="auth-title" id="pin-profile-label">—</div>
+      <div class="auth-sub">ใส่ PIN 6 หลัก</div>
       <div class="pin-dots" id="pin-dots">
         <span class="pin-dot" id="pd0"></span><span class="pin-dot" id="pd1"></span>
         <span class="pin-dot" id="pd2"></span><span class="pin-dot" id="pd3"></span>
@@ -420,12 +396,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       </div>
       <div class="pin-pad" id="pin-pad"></div>
       <div class="auth-err" id="pin-err"></div>
-      <button class="auth-link-btn" onclick="showAuthScreen('profile')">← เปลี่ยน profile</button>
+      <button class="auth-link-btn" onclick="showAuthScreen('profile')" style="margin-top:16px;display:block;width:100%">← เปลี่ยน profile</button>
     </div>
     <!-- S4: Create -->
     <div id="auth-s4" class="auth-screen">
       <div class="auth-logo">✨</div>
-      <div class="auth-title">สร้าง Profile ใหม่</div>
+      <div class="auth-title">Profile ใหม่</div>
       <div class="auth-sub">ข้อมูลแต่ละ profile แยกกันทั้งหมด</div>
       <input type="text" id="create-name" class="auth-input"
         placeholder="ชื่อ profile" autocomplete="off" spellcheck="false">
@@ -433,16 +409,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
         placeholder="ตั้ง PIN 6 หลัก" maxlength="6" inputmode="numeric" pattern="[0-9]*">
       <input type="password" id="create-pin2" class="auth-input"
         placeholder="ยืนยัน PIN" maxlength="6" inputmode="numeric" pattern="[0-9]*">
-      <button class="auth-btn purple" onclick="createProfile()">สร้าง Profile</button>
+      <button class="auth-btn" onclick="createProfile()">สร้าง Profile</button>
       <div class="auth-err" id="create-err"></div>
-      <button class="auth-link-btn" onclick="showAuthScreen('profile')" style="margin-top:8px">← กลับ</button>
+      <button class="auth-link-btn" onclick="showAuthScreen('profile')" style="margin-top:10px;display:block;width:100%">← กลับ</button>
     </div>
   </div>
 </div>
 
 <!-- TOP BAR -->
 <div class="topbar">
-  <a href="index.html" class="btn btn-ghost btn-sm" title="กลับหน้าแรก" style="flex-shrink:0;text-decoration:none;font-size:16px;padding:4px 8px">←</a>
+  <a href="index.html" title="กลับหน้าแรก" style="flex-shrink:0;text-decoration:none;font-size:15px;color:#007aff;padding:4px 6px;margin-right:2px">←</a>
   <div class="topbar-logo">🏢 Property</div>
   <div class="prop-selector">
     <span>🏠</span>
@@ -467,12 +443,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       <div style="border-top:1px solid #f3f4f6;padding:6px">
         <button onclick="document.getElementById('pm-profile-dropdown').style.display='none';load()" style="width:100%;text-align:left;padding:8px 12px;border:none;background:none;color:#6366f1;font-size:13px;cursor:pointer;border-radius:8px">🔄 โหลดข้อมูลจาก Sheets</button>
         <button onclick="pmDeleteProfile()" style="width:100%;text-align:left;padding:8px 12px;border:none;background:none;color:#dc2626;font-size:13px;cursor:pointer;border-radius:8px">🗑 ลบ profile นี้</button>
-        <button onclick="pmSignOut()" style="width:100%;text-align:left;padding:8px 12px;border:none;background:none;color:#6b7280;font-size:13px;cursor:pointer;border-radius:8px">↩ ออกจาก Google</button>
+        <button onclick="pmLogoutProfile()" style="width:100%;text-align:left;padding:8px 12px;border:none;background:none;color:#6b7280;font-size:13px;cursor:pointer;border-radius:8px">↩ ออกจาก Profile</button>
       </div>
     </div>
-  </div>
-  <div id="pm-user-pill" class="user-pill" style="display:none">
-    <img id="pm-user-avatar" class="user-avatar" src="" alt="">
   </div>
   <span id="pm-sync-dot" style="display:none;font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap;margin-left:4px;transition:all .3s"></span>
 </div>
@@ -1892,9 +1865,9 @@ function pmLaunchApp() {
 }
 
 function pmLogoutProfile() {
-  // กลับหน้า profile โดยไม่ต้อง login Google ใหม่
   try { localStorage.removeItem(PM_SESSION_KEY); } catch(e){}
-  location.reload();
+  try { localStorage.removeItem('condo_session'); } catch(e){}
+  location.href = 'index.html';
 }
 function pmDeleteProfile() {
   if(!_pmProfile) return;
@@ -1973,13 +1946,23 @@ function pmSwitchToProfile(name) {
 }
 function pmLogoutProfile() {
   try { localStorage.removeItem(PM_SESSION_KEY); } catch(e){}
-  location.reload();
+  try { localStorage.removeItem('condo_session'); } catch(e){}
+  location.href = 'index.html';
 }
 // ── Init ──
 window.addEventListener('DOMContentLoaded', () => {
   document.getElementById('profile-input')?.addEventListener('keydown', e => {
     if(e.key==='Enter') submitProfile();
   });
+  // 1) ตรวจ shared session จาก index.html ก่อน
+  try {
+    const shared = JSON.parse(localStorage.getItem('condo_session')||'{}');
+    if(shared.profile && shared.expires > Date.now()) {
+      _pmProfile = shared.profile;
+      pmLaunchApp(); return;
+    }
+  } catch(e){}
+  // 2) fallback: session ของ Property Manager เอง
   try {
     const sess = JSON.parse(localStorage.getItem(PM_SESSION_KEY)||'{}');
     if(sess.profile && sess.expires > Date.now()) {

@@ -2,110 +2,954 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🏠 Condo Manager</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>Condo Manager</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: #f1f5f9;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
+    :root {
+      --bg:#f5f5f7; --card:#fff; --text:#1d1d1f; --text2:#6e6e73; --text3:#aeaeb2;
+      --blue:#007aff; --blue-lt:rgba(0,122,255,.10);
+      --green:#34c759; --green-lt:rgba(52,199,89,.12);
+      --red:#ff3b30; --orange:#ff9500;
+      --border:rgba(0,0,0,.08); --divider:rgba(0,0,0,.06);
+      --shadow:0 2px 12px rgba(0,0,0,.08),0 0 1px rgba(0,0,0,.05);
+      --shadow-lg:0 8px 32px rgba(0,0,0,.12),0 0 1px rgba(0,0,0,.07);
+      --radius:14px;
     }
-    .container {
-      width: 100%;
-      max-width: 420px;
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+    body{
+      font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-serif;
+      background:var(--bg);color:var(--text);min-height:100vh;
+      -webkit-font-smoothing:antialiased;
     }
-    .header {
-      text-align: center;
-      margin-bottom: 32px;
+
+    /* ═══ AUTH OVERLAY ═══ */
+    #auth-overlay{
+      position:fixed;inset:0;z-index:999;
+      background:var(--bg);
+      display:flex;align-items:center;justify-content:center;padding:24px;
     }
-    .header h1 {
-      font-size: 28px;
-      font-weight: 800;
-      color: #1e40af;
-      margin-bottom: 6px;
+    .auth-wrap{width:100%;max-width:320px}
+
+    /* Brand */
+    .auth-brand{text-align:center;margin-bottom:36px}
+    .app-icon-lg{
+      width:80px;height:80px;border-radius:22px;margin:0 auto 14px;
+      background:linear-gradient(145deg,#1a8fff 0%,#5ac8fa 100%);
+      display:flex;align-items:center;justify-content:center;
+      font-size:38px;
+      box-shadow:0 6px 24px rgba(0,122,255,.30);
     }
-    .header p {
-      font-size: 14px;
-      color: #9ca3af;
+    .auth-brand h1{font-size:24px;font-weight:700;color:var(--text);letter-spacing:-.4px}
+    .auth-brand p{font-size:14px;color:var(--text2);margin-top:4px}
+
+    /* Screens */
+    .auth-screen{display:none}
+    .auth-screen.active{display:block}
+
+    /* Input */
+    .auth-field{margin-bottom:12px}
+    .auth-field label{font-size:11px;font-weight:600;color:var(--text2);display:block;margin-bottom:6px;letter-spacing:.3px;text-transform:uppercase}
+    .auth-input{
+      width:100%;padding:12px 14px;
+      background:var(--card);border:1px solid rgba(0,0,0,.12);
+      border-radius:10px;font-size:16px;color:var(--text);
+      outline:none;transition:border-color .15s,box-shadow .15s;
+      -webkit-appearance:none;
     }
-    .card {
-      background: #fff;
-      border-radius: 16px;
-      padding: 24px;
-      margin-bottom: 14px;
-      text-decoration: none;
-      display: flex;
-      align-items: center;
-      gap: 18px;
-      box-shadow: 0 2px 12px rgba(0,0,0,.07);
-      border: 2px solid transparent;
-      transition: all .2s;
-      cursor: pointer;
+    .auth-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(0,122,255,.12)}
+
+    /* Buttons */
+    .auth-btn{
+      width:100%;padding:14px;border-radius:12px;border:none;
+      background:var(--blue);color:#fff;
+      font-size:16px;font-weight:600;cursor:pointer;
+      margin-top:10px;transition:opacity .15s,transform .1s;
     }
-    .card:hover {
-      border-color: #3b82f6;
-      box-shadow: 0 4px 20px rgba(59,130,246,.15);
-      transform: translateY(-2px);
+    .auth-btn:hover{opacity:.88}
+    .auth-btn:active{opacity:.75;transform:scale(.98)}
+    .auth-link{
+      text-align:center;margin-top:18px;
+      font-size:14px;color:var(--blue);cursor:pointer;font-weight:500;
     }
-    .card-icon {
-      font-size: 40px;
-      flex-shrink: 0;
+    .auth-link:hover{opacity:.7}
+
+    /* PIN */
+    .pin-name{text-align:center;font-size:18px;font-weight:600;color:var(--text);margin-bottom:4px}
+    .pin-hint{text-align:center;font-size:14px;color:var(--text2);margin-bottom:30px}
+    .pin-dots{display:flex;justify-content:center;gap:14px;margin-bottom:36px}
+    .pin-dot{
+      width:13px;height:13px;border-radius:50%;
+      background:rgba(0,0,0,.18);
+      transition:all .2s cubic-bezier(.34,1.56,.64,1);
     }
-    .card-body h2 {
-      font-size: 16px;
-      font-weight: 700;
-      color: #1f2937;
-      margin-bottom: 4px;
+    .pin-dot.filled{background:var(--text);transform:scale(1.2)}
+    .pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+    .pin-key{
+      aspect-ratio:1;border-radius:50%;border:none;
+      background:rgba(0,0,0,.07);
+      font-size:24px;font-weight:300;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;
+      transition:background .1s;
+      font-family:inherit;
     }
-    .card-body p {
-      font-size: 13px;
-      color: #6b7280;
-      line-height: 1.5;
+    .pin-key:active{background:rgba(0,0,0,.18)}
+    .pin-key.del,.pin-key.cancel{font-size:15px;color:var(--text2);font-weight:500;background:transparent}
+    .pin-key.cancel{font-size:13px}
+    .pin-err{text-align:center;color:var(--red);font-size:13px;font-weight:500;margin-top:16px;display:none}
+
+    /* Create profile */
+    .grid2c{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .create-err{color:var(--red);font-size:12px;font-weight:500;margin-top:8px;display:none}
+
+    /* ═══ CHANGE PIN MODAL ═══ */
+    #changepin-modal{
+      position:fixed;inset:0;z-index:9998;
+      background:rgba(0,0,0,.4);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+      display:none;align-items:flex-end;justify-content:center;
     }
-    .badge {
-      display: inline-block;
-      background: #eff6ff;
-      color: #3b82f6;
-      font-size: 11px;
-      font-weight: 600;
-      padding: 2px 8px;
-      border-radius: 20px;
-      margin-top: 6px;
+    #changepin-modal.open{display:flex}
+    .cp-sheet{
+      background:#f5f5f7;border-radius:24px 24px 0 0;
+      width:100%;max-width:480px;padding:0 0 48px;
+      box-shadow:0 -8px 40px rgba(0,0,0,.18);
     }
-    .badge.green {
-      background: #f0fdf4;
-      color: #16a34a;
+    .cp-handle{width:36px;height:5px;border-radius:3px;background:rgba(0,0,0,.18);margin:10px auto 0}
+    .cp-title{
+      font-size:17px;font-weight:700;color:var(--text);
+      padding:16px 20px 12px;
+      display:flex;align-items:center;justify-content:space-between;
     }
+    .cp-close{font-size:13px;color:var(--blue);font-weight:500;background:none;border:none;cursor:pointer;padding:4px}
+    .cp-body{padding:0 16px}
+    .cp-field{margin-bottom:12px}
+    .cp-field label{font-size:11px;font-weight:600;color:var(--text2);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.3px}
+    .cp-input{
+      width:100%;padding:11px 13px;border:1px solid rgba(0,0,0,.12);
+      border-radius:10px;font-size:16px;color:var(--text);outline:none;
+      background:var(--card);font-family:inherit;-webkit-appearance:none;
+      transition:border-color .15s,box-shadow .15s;
+    }
+    .cp-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(0,122,255,.12)}
+    .cp-err{font-size:12px;color:var(--red);font-weight:500;margin-top:6px;display:none}
+    .cp-btn{
+      width:100%;padding:14px;border-radius:12px;border:none;
+      background:var(--blue);color:#fff;font-size:16px;font-weight:600;
+      cursor:pointer;margin-top:8px;font-family:inherit;transition:opacity .15s;
+    }
+    .cp-btn:hover{opacity:.88}
+    .cp-btn:active{opacity:.75}
+
+    /* ═══ EMERGENCY MODAL ═══ */
+    #emergency-modal{
+      position:fixed;inset:0;z-index:99999;
+      background:rgba(0,0,0,.5);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+      display:none;align-items:center;justify-content:center;padding:24px;
+    }
+    #emergency-modal.open{display:flex}
+    .emg-card{
+      background:#fff;border-radius:20px;padding:28px 24px;
+      width:100%;max-width:320px;
+      box-shadow:0 16px 48px rgba(0,0,0,.22);
+    }
+    .emg-icon{text-align:center;font-size:36px;margin-bottom:8px}
+    .emg-title{text-align:center;font-size:18px;font-weight:700;color:var(--text);margin-bottom:4px}
+    .emg-sub{text-align:center;font-size:13px;color:var(--text2);margin-bottom:20px;line-height:1.5}
+    .emg-input{
+      width:100%;padding:11px 13px;border:1.5px solid rgba(0,0,0,.12);
+      border-radius:10px;font-size:15px;color:var(--text);outline:none;
+      background:#f9f9f9;font-family:inherit;-webkit-appearance:none;
+      transition:border-color .15s,box-shadow .15s;margin-bottom:8px;
+    }
+    .emg-input:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(255,59,48,.12)}
+    .emg-err{font-size:12px;color:var(--red);font-weight:500;margin-bottom:10px;display:none}
+    .emg-actions{display:flex;gap:8px;margin-top:4px}
+    .emg-btn-ok{
+      flex:1;padding:12px;border-radius:10px;border:none;
+      background:var(--red);color:#fff;font-size:15px;font-weight:600;
+      cursor:pointer;font-family:inherit;transition:opacity .15s;
+    }
+    .emg-btn-ok:hover{opacity:.88}
+    .emg-btn-cancel{
+      padding:12px 16px;border-radius:10px;border:none;
+      background:rgba(0,0,0,.06);color:var(--text2);
+      font-size:15px;cursor:pointer;font-family:inherit;
+    }
+
+    /* ═══ ADMIN PANEL MODAL ═══ */
+    #admin-modal{
+      position:fixed;inset:0;z-index:9999;
+      background:rgba(0,0,0,.4);
+      backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+      display:none;align-items:flex-end;justify-content:center;
+      padding:0;
+    }
+    #admin-modal.open{display:flex}
+    .admin-sheet{
+      background:#f5f5f7;border-radius:24px 24px 0 0;
+      width:100%;max-width:480px;
+      padding:0 0 40px;
+      max-height:85vh;overflow-y:auto;
+      box-shadow:0 -8px 40px rgba(0,0,0,.18);
+    }
+    .admin-sheet-handle{
+      width:36px;height:5px;border-radius:3px;
+      background:rgba(0,0,0,.18);margin:10px auto 0;
+    }
+    .admin-sheet-title{
+      font-size:17px;font-weight:700;color:var(--text);
+      padding:16px 20px 12px;letter-spacing:-.3px;
+      display:flex;align-items:center;justify-content:space-between;
+    }
+    .admin-close-btn{
+      font-size:13px;color:var(--blue);font-weight:500;
+      background:none;border:none;cursor:pointer;padding:4px;
+    }
+    .admin-list{background:var(--card);border-radius:var(--radius);margin:0 16px 12px;overflow:hidden}
+    .admin-profile-row{
+      display:flex;align-items:center;gap:12px;padding:13px 14px;
+      border-bottom:.5px solid var(--divider);position:relative;
+    }
+    .admin-profile-row:last-child{border-bottom:none}
+    .ap-avatar{
+      width:36px;height:36px;border-radius:50%;
+      background:var(--blue);color:#fff;font-size:15px;font-weight:700;
+      display:flex;align-items:center;justify-content:center;flex-shrink:0;
+    }
+    .ap-info{flex:1}
+    .ap-name{font-size:14px;font-weight:600;color:var(--text)}
+    .ap-sub{font-size:12px;color:var(--text3);margin-top:1px}
+    .ap-reset-btn{
+      font-size:12px;font-weight:600;padding:6px 12px;
+      border-radius:8px;border:none;cursor:pointer;
+      background:rgba(255,149,0,.12);color:var(--orange);
+      transition:background .12s;
+    }
+    .ap-reset-btn:hover{background:rgba(255,149,0,.22)}
+    .ap-reset-btn:disabled{opacity:.4;pointer-events:none}
+
+    /* Reset PIN form (inline) */
+    .ap-reset-form{
+      background:#f5f5f7;border-radius:12px;padding:14px;margin:0 16px 12px;
+    }
+    .ap-reset-form label{font-size:11px;font-weight:600;color:var(--text2);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.3px}
+    .ap-reset-input{
+      width:100%;padding:10px 12px;border:1px solid rgba(0,0,0,.12);
+      border-radius:9px;font-size:16px;outline:none;background:var(--card);
+      color:var(--text);font-family:inherit;-webkit-appearance:none;
+      margin-bottom:8px;transition:border-color .15s,box-shadow .15s;
+    }
+    .ap-reset-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(0,122,255,.12)}
+    .ap-reset-err{font-size:12px;color:var(--red);margin-bottom:8px;display:none}
+    .ap-reset-actions{display:flex;gap:8px}
+    .ap-btn-confirm{
+      flex:1;padding:10px;border-radius:9px;border:none;
+      background:var(--orange);color:#fff;font-size:14px;font-weight:600;
+      cursor:pointer;font-family:inherit;transition:opacity .15s;
+    }
+    .ap-btn-confirm:hover{opacity:.88}
+    .ap-btn-cancel{
+      padding:10px 14px;border-radius:9px;border:none;
+      background:rgba(0,0,0,.06);color:var(--text2);
+      font-size:14px;cursor:pointer;font-family:inherit;
+    }
+
+    /* "ลืม PIN?" info box */
+    .forgot-info{
+      background:rgba(0,122,255,.07);border-radius:12px;padding:12px 14px;
+      margin:10px 0 0;display:none;
+    }
+    .forgot-info p{font-size:13px;color:var(--text2);line-height:1.6}
+    .forgot-info strong{color:var(--blue)}
+
+    /* ═══ MAIN APP ═══ */
+    #app-content{display:none}
+
+    /* Topbar */
+    .topbar{
+      position:fixed;top:0;left:0;right:0;height:52px;
+      background:rgba(255,255,255,.82);
+      backdrop-filter:blur(20px) saturate(180%);
+      -webkit-backdrop-filter:blur(20px) saturate(180%);
+      border-bottom:.5px solid rgba(0,0,0,.12);
+      display:flex;align-items:center;padding:0 20px;z-index:100;
+    }
+    .topbar-title{font-size:15px;font-weight:600;color:var(--text);flex:1;letter-spacing:-.2px}
+
+    /* Profile chip */
+    .chip-wrap{position:relative;flex-shrink:0}
+    .chip{
+      display:flex;align-items:center;gap:7px;
+      padding:5px 10px 5px 6px;border-radius:20px;
+      background:rgba(0,0,0,.055);cursor:pointer;user-select:none;
+      transition:background .15s;
+    }
+    .chip:hover{background:rgba(0,0,0,.09)}
+    .chip-avatar{
+      width:24px;height:24px;border-radius:50%;
+      background:var(--blue);color:#fff;
+      font-size:11px;font-weight:700;
+      display:flex;align-items:center;justify-content:center;flex-shrink:0;
+    }
+    .chip-name{font-size:13px;font-weight:500;color:var(--text);max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .chip-caret{font-size:9px;color:var(--text3)}
+
+    /* Dropdown */
+    .chip-dd{
+      display:none;position:absolute;top:calc(100% + 8px);right:0;
+      background:rgba(255,255,255,.92);
+      backdrop-filter:blur(24px) saturate(180%);
+      -webkit-backdrop-filter:blur(24px) saturate(180%);
+      border-radius:14px;
+      box-shadow:var(--shadow-lg);
+      min-width:200px;z-index:300;overflow:hidden;
+    }
+    .chip-dd.open{display:block}
+    .dd-hd{padding:10px 14px 5px;font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+    .dd-row{display:block;width:100%;text-align:left;padding:9px 14px;border:none;background:none;font-size:14px;cursor:pointer;color:var(--text);font-family:inherit}
+    .dd-row:hover{background:rgba(0,0,0,.04)}
+    .dd-row.cur{color:var(--blue);font-weight:600}
+    .dd-row.danger{color:var(--red)}
+    .dd-sep{height:.5px;background:var(--divider);margin:4px 0}
+
+    /* Main content */
+    .main-wrap{
+      padding-top:80px;padding-bottom:40px;
+      display:flex;justify-content:center;min-height:100vh;
+    }
+    .container{width:100%;max-width:420px;padding:0 20px}
+    .page-hd{margin-bottom:24px}
+    .page-hd h2{font-size:22px;font-weight:700;color:var(--text);letter-spacing:-.4px}
+    .page-hd p{font-size:14px;color:var(--text2);margin-top:4px}
+
+    /* App list — iOS Settings style */
+    .app-group{
+      background:var(--card);border-radius:var(--radius);
+      box-shadow:var(--shadow);overflow:hidden;margin-bottom:16px;
+    }
+    .app-row{
+      display:flex;align-items:center;gap:14px;
+      padding:13px 16px;text-decoration:none;color:inherit;
+      position:relative;transition:background .1s;
+    }
+    .app-row:not(:last-child)::after{
+      content:'';position:absolute;left:60px;right:0;bottom:0;
+      height:.5px;background:var(--divider);
+    }
+    .app-row:hover{background:rgba(0,0,0,.03)}
+    .app-row:active{background:rgba(0,0,0,.06)}
+    .app-row.locked{opacity:.38;pointer-events:none}
+
+    .row-icon{
+      width:44px;height:44px;border-radius:11px;flex-shrink:0;
+      display:flex;align-items:center;justify-content:center;font-size:22px;
+    }
+    .ri-blue{background:linear-gradient(145deg,#1a8fff,#5ac8fa)}
+    .ri-teal{background:linear-gradient(145deg,#30b0c7,#34c759)}
+    .ri-orange{background:linear-gradient(145deg,#ff9f0a,#ffd60a)}
+
+    .row-body{flex:1}
+    .row-name{font-size:15px;font-weight:500;color:var(--text);margin-bottom:1px}
+    .row-desc{font-size:12px;color:var(--text2);line-height:1.4}
+    .row-badges{display:flex;gap:4px;margin-top:5px}
+    .rbadge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px}
+    .rbadge-blue{background:var(--blue-lt);color:var(--blue)}
+    .rbadge-green{background:var(--green-lt);color:var(--green)}
+
+    .row-chevron{color:var(--text3);font-size:12px;margin-left:4px}
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <h1>🏠 Condo Manager</h1>
-      <p>เลือกโปรแกรมที่ต้องการใช้งาน</p>
+
+<!-- ════════ AUTH OVERLAY ════════ -->
+<div id="auth-overlay">
+  <div class="auth-wrap">
+    <div class="auth-brand">
+      <div class="app-icon-lg" id="app-logo" onclick="logoTap()">🏠</div>
+      <h1>Condo Manager</h1>
+      <p>ระบบจัดการอสังหาริมทรัพย์</p>
     </div>
 
-    <a class="card" href="property-manager.html">
-      <div class="card-icon">🏢</div>
-      <div class="card-body">
-        <h2>Property Manager</h2>
-        <p>จัดการอสังหาริมทรัพย์หลายโครงการ เพิ่ม/ลบได้ไม่จำกัด</p>
+    <!-- S2: Profile -->
+    <div id="auth-s2" class="auth-screen active">
+      <div class="auth-field">
+        <label>ชื่อ Profile</label>
+        <input id="profile-input" class="auth-input" type="text"
+               placeholder="พิมพ์ชื่อ profile" autocomplete="off" autocapitalize="off"
+               onkeydown="if(event.key==='Enter')submitProfile()">
       </div>
-    </a>
+      <button class="auth-btn" onclick="submitProfile()">ถัดไป</button>
+      <div class="auth-link" onclick="showAuthScreen('create')">ยังไม่มี profile? สร้างใหม่</div>
+    </div>
 
-    <a class="card" href="the-base-manage-final.html">
-      <div class="card-icon">🏖️</div>
-      <div class="card-body">
-        <h2>The Base เชิงทะเล</h2>
-        <p>จัดการห้องเช่า The Base ภูเก็ต · by Sansiri</p>
-        <span class="badge">4 ห้อง</span>
+    <!-- S3: PIN -->
+    <div id="auth-s3" class="auth-screen">
+      <div class="pin-name" id="pin-profile-label">—</div>
+      <div class="pin-hint">ใส่ PIN 6 หลัก</div>
+      <div class="pin-dots">
+        <div class="pin-dot" id="pd0"></div><div class="pin-dot" id="pd1"></div>
+        <div class="pin-dot" id="pd2"></div><div class="pin-dot" id="pd3"></div>
+        <div class="pin-dot" id="pd4"></div><div class="pin-dot" id="pd5"></div>
       </div>
-    </a>
+      <div class="pin-pad" id="pin-pad"></div>
+      <div class="pin-err" id="pin-err">PIN ไม่ถูกต้อง</div>
+      <div class="auth-link" onclick="showAuthScreen('profile')" style="margin-top:20px">← เปลี่ยน profile</div>
+      <div id="forgot-pin-link" class="auth-link" onclick="showForgotInfo()" style="margin-top:8px;font-size:13px;color:var(--text3)">ลืม PIN?</div>
+      <div class="forgot-info" id="forgot-info">
+        <p>🔐 ติดต่อ <strong>zaataan</strong> (Admin) เพื่อ Reset PIN ของคุณ<br>Admin สามารถ Reset ได้จากเมนู <strong>จัดการ Profiles</strong> ที่หน้าหลัก</p>
+      </div>
+    </div>
+
+    <!-- S4: Create -->
+    <div id="auth-s4" class="auth-screen">
+      <div class="auth-field">
+        <label>ชื่อ Profile</label>
+        <input id="create-name" class="auth-input" type="text" placeholder="ชื่อ profile" autocapitalize="off">
+      </div>
+      <div class="auth-field">
+        <label>ตั้ง PIN 6 หลัก</label>
+        <div class="grid2c">
+          <input id="create-pin1" class="auth-input" type="password" inputmode="numeric" maxlength="6" placeholder="PIN">
+          <input id="create-pin2" class="auth-input" type="password" inputmode="numeric" maxlength="6" placeholder="ยืนยัน">
+        </div>
+      </div>
+      <div id="create-err" class="create-err"></div>
+      <button class="auth-btn" onclick="createProfile()">สร้าง Profile</button>
+      <div class="auth-link" onclick="showAuthScreen('profile')">← กลับ</div>
+    </div>
   </div>
+</div>
+
+<!-- ════════ MAIN APP ════════ -->
+<div id="app-content">
+  <div class="topbar">
+    <div class="topbar-title">Condo Manager</div>
+    <div class="chip-wrap">
+      <div class="chip" onclick="toggleDropdown()">
+        <div class="chip-avatar" id="chip-avatar">?</div>
+        <span class="chip-name" id="chip-name"></span>
+        <span class="chip-caret">▾</span>
+      </div>
+      <div class="chip-dd" id="chip-dd">
+        <div class="dd-hd">Profiles</div>
+        <div id="dd-profiles"></div>
+        <div id="dd-admin-sep" class="dd-sep" style="display:none"></div>
+        <button id="dd-admin-btn" class="dd-row" onclick="openAdminPanel()" style="display:none;color:var(--orange)">🔧 จัดการ Profiles</button>
+        <div class="dd-sep"></div>
+        <button class="dd-row danger" onclick="deleteProfile()">🗑 ลบ profile นี้</button>
+        <button class="dd-row" onclick="logoutIndex()" style="color:var(--text2)">↩ ออกจาก Profile</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-wrap">
+    <div class="container">
+      <div class="page-hd">
+        <h2>เลือกโปรแกรม</h2>
+        <p id="header-sub">ยินดีต้อนรับ</p>
+      </div>
+
+      <div class="app-group">
+        <!-- The Base — admin only -->
+        <a id="card-thebase" class="app-row" href="the-base-manage-final.html" style="display:none">
+          <div class="row-icon ri-blue">🏖️</div>
+          <div class="row-body">
+            <div class="row-name">The Base เชิงทะเล</div>
+            <div class="row-desc">ภูเก็ต · by Sansiri</div>
+            <div class="row-badges"><span class="rbadge rbadge-blue">4 ห้อง</span></div>
+          </div>
+          <span class="row-chevron">›</span>
+        </a>
+
+        <!-- Property Manager — ทุก profile -->
+        <a id="card-propmanager" class="app-row" href="property-manager.html">
+          <div class="row-icon ri-teal">🏢</div>
+          <div class="row-body">
+            <div class="row-name">Property Manager</div>
+            <div class="row-desc">จัดการอสังหาริมทรัพย์หลายโครงการ</div>
+            <div class="row-badges"><span class="rbadge rbadge-green">ทุก profile</span></div>
+          </div>
+          <span class="row-chevron">›</span>
+        </a>
+      </div>
+
+      <!-- Settings group — ทุก profile -->
+      <div class="app-group">
+        <div class="app-row" onclick="openChangePinModal()" style="cursor:pointer">
+          <div class="row-icon" style="background:linear-gradient(145deg,#636366,#aeaeb2)">🔑</div>
+          <div class="row-body">
+            <div class="row-name">เปลี่ยน PIN</div>
+            <div class="row-desc">ตั้ง PIN ใหม่สำหรับ profile นี้</div>
+          </div>
+          <span class="row-chevron">›</span>
+        </div>
+      </div>
+
+      <!-- Admin card — admin only -->
+      <div id="card-admin" class="app-group" style="display:none">
+        <div class="app-row" onclick="openAdminPanel()" style="cursor:pointer">
+          <div class="row-icon ri-orange">🔧</div>
+          <div class="row-body">
+            <div class="row-name">จัดการ Profiles</div>
+            <div class="row-desc">Reset PIN · ดู profile ทั้งหมด</div>
+          </div>
+          <span class="row-chevron">›</span>
+        </div>
+      </div>
+
+      <div style="text-align:center;margin-top:8px">
+        <button onclick="logoutIndex()" style="background:none;border:none;color:var(--text3);font-size:14px;font-weight:500;cursor:pointer;padding:8px 16px;border-radius:8px;transition:color .15s" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--text3)'">↩ ออกจาก Profile</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ CHANGE PIN MODAL ════════ -->
+<div id="changepin-modal" onclick="cpBgClick(event)">
+  <div class="cp-sheet">
+    <div class="cp-handle"></div>
+    <div class="cp-title">
+      <span>🔑 เปลี่ยน PIN</span>
+      <button class="cp-close" onclick="closeChangePinModal()">ปิด</button>
+    </div>
+    <div class="cp-body">
+      <div class="cp-field">
+        <label>PIN ปัจจุบัน</label>
+        <input id="cp-old" class="cp-input" type="password" inputmode="numeric" maxlength="6" placeholder="PIN เดิม 6 หลัก">
+      </div>
+      <div class="cp-field">
+        <label>PIN ใหม่</label>
+        <input id="cp-new1" class="cp-input" type="password" inputmode="numeric" maxlength="6" placeholder="PIN ใหม่ 6 หลัก">
+      </div>
+      <div class="cp-field">
+        <label>ยืนยัน PIN ใหม่</label>
+        <input id="cp-new2" class="cp-input" type="password" inputmode="numeric" maxlength="6" placeholder="พิมพ์ PIN ใหม่อีกครั้ง">
+      </div>
+      <div id="cp-err" class="cp-err"></div>
+      <button class="cp-btn" onclick="submitChangePin()">บันทึก PIN ใหม่</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ EMERGENCY RESET MODAL ════════ -->
+<div id="emergency-modal">
+  <div class="emg-card">
+    <div class="emg-icon">🚨</div>
+    <div class="emg-title">Emergency Reset</div>
+    <div class="emg-sub" id="emg-sub">ใส่ Master Password เพื่อ Reset PIN ของ <strong id="emg-profile-name"></strong></div>
+    <input id="emg-master-input" class="emg-input" type="password" placeholder="Master Password" autocomplete="off">
+    <div id="emg-err" class="emg-err">Master Password ไม่ถูกต้อง</div>
+    <div class="emg-actions">
+      <button class="emg-btn-ok" onclick="emergencyConfirm()">Reset PIN</button>
+      <button class="emg-btn-cancel" onclick="emergencyClose()">ยกเลิก</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ ADMIN MODAL ════════ -->
+<div id="admin-modal" onclick="adminModalBgClick(event)">
+  <div class="admin-sheet">
+    <div class="admin-sheet-handle"></div>
+    <div class="admin-sheet-title">
+      <span>🔧 จัดการ Profiles</span>
+      <button class="admin-close-btn" onclick="closeAdminPanel()">ปิด</button>
+    </div>
+    <div id="admin-list" class="admin-list"></div>
+    <div id="ap-reset-form-wrap" class="ap-reset-form" style="display:none">
+      <label id="ap-reset-label">ตั้ง PIN ใหม่ให้ <strong></strong></label>
+      <input id="ap-new-pin1" class="ap-reset-input" type="password" inputmode="numeric" maxlength="6" placeholder="PIN ใหม่ 6 หลัก">
+      <input id="ap-new-pin2" class="ap-reset-input" type="password" inputmode="numeric" maxlength="6" placeholder="ยืนยัน PIN">
+      <div id="ap-reset-err" class="ap-reset-err"></div>
+      <div class="ap-reset-actions">
+        <button class="ap-btn-confirm" onclick="confirmResetPin()">✓ บันทึก PIN</button>
+        <button class="ap-btn-cancel" onclick="cancelResetPin()">ยกเลิก</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const CONDO_PROFILES_KEY = 'condo_profiles';
+const CONDO_SESSION_KEY  = 'condo_session';
+const CONDO_UNLOCKS_KEY  = 'condo_unlocks';
+const SESSION_TTL = 7 * 24 * 60 * 60 * 1000;
+const UNLOCK_TTL  = 24 * 60 * 60 * 1000;
+const ADMIN_PROFILES = ['zaataan'];
+
+let _profile = null, _pinBuf = '';
+
+function getProfiles()   { try { return JSON.parse(localStorage.getItem(CONDO_PROFILES_KEY)||'{}'); } catch(e){ return {}; } }
+function saveProfiles(p) { localStorage.setItem(CONDO_PROFILES_KEY, JSON.stringify(p)); }
+function getUnlocks()    { try { return JSON.parse(localStorage.getItem(CONDO_UNLOCKS_KEY)||'{}'); } catch(e){ return {}; } }
+function saveUnlocks(u)  { localStorage.setItem(CONDO_UNLOCKS_KEY, JSON.stringify(u)); }
+function isUnlocked(n)   { const u=getUnlocks(); return u[n]&&u[n].expires>Date.now(); }
+function saveSession()   { localStorage.setItem(CONDO_SESSION_KEY, JSON.stringify({profile:_profile,expires:Date.now()+SESSION_TTL})); }
+function clearSession()  { try{localStorage.removeItem(CONDO_SESSION_KEY);}catch(e){} }
+
+function showAuthScreen(name) {
+  document.querySelectorAll('.auth-screen').forEach(el=>el.classList.remove('active'));
+  const map = {profile:'auth-s2',pin:'auth-s3',create:'auth-s4'};
+  document.getElementById(map[name])?.classList.add('active');
+  if(name==='profile') { const inp=document.getElementById('profile-input'); inp.value=''; setTimeout(()=>inp.focus(),80); }
+  if(name==='create')  { document.getElementById('create-name').readOnly = false; }
+  if(name==='pin')     {
+    _pinBuf=''; buildPinPad(); updatePinDots();
+    document.getElementById('pin-err').style.display='none';
+    document.getElementById('forgot-info').style.display='none';
+    document.getElementById('forgot-pin-link').style.display = 'block';
+  }
+}
+
+function submitProfile() {
+  const name = document.getElementById('profile-input').value.trim();
+  if(!name) return;
+  if(!getProfiles()[name]) {
+    document.getElementById('create-name').value = name;
+    document.getElementById('create-err').style.display='none';
+    document.getElementById('create-pin1').value='';
+    document.getElementById('create-pin2').value='';
+    showAuthScreen('create'); return;
+  }
+  _profile = name;
+  document.getElementById('pin-profile-label').textContent = name;
+  if(isUnlocked(name)) { launchApp(); return; }
+  showAuthScreen('pin');
+}
+
+function buildPinPad() {
+  const pad = document.getElementById('pin-pad');
+  const keys = ['1','2','3','4','5','6','7','8','9','cancel','0','del'];
+  pad.innerHTML = keys.map(k => {
+    if(k==='cancel') return `<button class="pin-key cancel" onclick="showAuthScreen('profile')">เปลี่ยน</button>`;
+    if(k==='del')    return `<button class="pin-key del"    onclick="pinDel()">⌫</button>`;
+    return `<button class="pin-key" onclick="pinKey('${k}')">${k}</button>`;
+  }).join('');
+}
+function updatePinDots() {
+  [0,1,2,3,4,5].forEach(i => {
+    document.getElementById('pd'+i)?.classList.toggle('filled', i<_pinBuf.length);
+  });
+}
+function pinKey(k) {
+  if(_pinBuf.length>=6) return;
+  _pinBuf += k; updatePinDots();
+  if(_pinBuf.length===6) verifyPin();
+}
+function pinDel() { _pinBuf=_pinBuf.slice(0,-1); updatePinDots(); }
+function verifyPin() {
+  const profiles = getProfiles();
+  if(profiles[_profile]?.pin === _pinBuf) {
+    const u=getUnlocks(); u[_profile]={expires:Date.now()+UNLOCK_TTL}; saveUnlocks(u);
+    launchApp();
+  } else {
+    document.getElementById('pin-err').style.display='block';
+    setTimeout(()=>{ _pinBuf=''; updatePinDots(); document.getElementById('pin-err').style.display='none'; }, 900);
+  }
+}
+
+function createProfile() {
+  const name = document.getElementById('create-name').value.trim();
+  const pin1 = document.getElementById('create-pin1').value.trim();
+  const pin2 = document.getElementById('create-pin2').value.trim();
+  const err  = document.getElementById('create-err');
+  err.style.display='none';
+  if(!name)                    { err.textContent='กรุณาใส่ชื่อ profile';    err.style.display='block'; return; }
+  if(!/^\d{6}$/.test(pin1))   { err.textContent='PIN ต้องเป็นตัวเลข 6 หลัก'; err.style.display='block'; return; }
+  if(pin1!==pin2)              { err.textContent='PIN ไม่ตรงกัน';            err.style.display='block'; return; }
+  const profiles = getProfiles();
+  // ถ้า profile มีอยู่แล้วและมี PIN → error (แต่ถ้าไม่มี PIN = reset mode → อนุญาต)
+  if(profiles[name] && profiles[name].pin) { err.textContent='ชื่อ profile นี้มีอยู่แล้ว'; err.style.display='block'; return; }
+  profiles[name] = profiles[name] || {};
+  profiles[name].pin = pin1; saveProfiles(profiles);
+  _profile = name;
+  const u=getUnlocks(); u[name]={expires:Date.now()+UNLOCK_TTL}; saveUnlocks(u);
+  launchApp();
+}
+
+function launchApp() {
+  saveSession();
+  const isAdmin = ADMIN_PROFILES.includes(_profile);
+  document.getElementById('card-thebase').style.display = isAdmin ? 'flex' : 'none';
+  document.getElementById('chip-name').textContent  = _profile;
+  document.getElementById('chip-avatar').textContent = _profile.charAt(0).toUpperCase();
+  document.getElementById('header-sub').textContent  = `ยินดีต้อนรับ, ${_profile} 👋`;
+  // Show/hide admin card & dropdown button
+  document.getElementById('card-admin').style.display    = isAdmin ? 'block' : 'none';
+  document.getElementById('dd-admin-btn').style.display  = isAdmin ? 'block' : 'none';
+  document.getElementById('dd-admin-sep').style.display  = isAdmin ? 'block' : 'none';
+  document.getElementById('auth-overlay').style.display = 'none';
+  document.getElementById('app-content').style.display  = 'block';
+}
+
+function toggleDropdown() {
+  const dd = document.getElementById('chip-dd');
+  if(dd.classList.contains('open')) { dd.classList.remove('open'); return; }
+  const profiles = getProfiles();
+  document.getElementById('dd-profiles').innerHTML = Object.keys(profiles).map(name =>
+    `<button class="dd-row ${name===_profile?'cur':''}" onclick="switchProfile('${name}')">
+      <span style="display:inline-block;width:16px">${name===_profile?'✓':''}</span>${name}
+     </button>`
+  ).join('') || '<div style="padding:8px 14px;font-size:13px;color:var(--text3)">ยังไม่มี profile</div>';
+  dd.classList.add('open');
+  setTimeout(()=>document.addEventListener('click', closeDropdown), 10);
+}
+function closeDropdown(e) {
+  const wrap = document.getElementById('chip-dd').closest('.chip-wrap');
+  if(!wrap?.contains(e.target)) {
+    document.getElementById('chip-dd').classList.remove('open');
+    document.removeEventListener('click', closeDropdown);
+  }
+}
+function switchProfile(name) {
+  document.getElementById('chip-dd').classList.remove('open');
+  document.removeEventListener('click', closeDropdown);
+  if(name===_profile) return;
+  _profile = name;
+  if(isUnlocked(name)) { launchApp(); return; }
+  clearSession();
+  document.getElementById('pin-profile-label').textContent = name;
+  showAuthScreen('pin');
+  document.getElementById('auth-overlay').style.display = 'flex';
+  document.getElementById('app-content').style.display  = 'none';
+}
+function deleteProfile() {
+  document.getElementById('chip-dd').classList.remove('open');
+  if(!_profile) return;
+  if(!confirm(`ลบ profile "${_profile}"?\nPIN จะหายถาวร`)) return;
+  const pin = prompt(`🔐 ใส่ PIN ของ "${_profile}" เพื่อยืนยัน`);
+  if(pin===null) return;
+  const profiles = getProfiles();
+  if(profiles[_profile]?.pin !== pin.trim()) { alert('❌ PIN ไม่ถูกต้อง'); return; }
+  delete profiles[_profile]; saveProfiles(profiles);
+  const u=getUnlocks(); delete u[_profile]; saveUnlocks(u);
+  logoutIndex();
+}
+function logoutIndex() {
+  document.getElementById('chip-dd').classList.remove('open');
+  const lastProfile = _profile;
+  clearSession(); _profile=null; _pinBuf='';
+  document.getElementById('auth-overlay').style.display = 'flex';
+  document.getElementById('app-content').style.display  = 'none';
+  showAuthScreen('profile');
+  // Clear unlock cache → ต้องใส่ PIN ใหม่ทุกครั้ง
+  if(lastProfile) {
+    const u = getUnlocks(); delete u[lastProfile]; saveUnlocks(u);
+    const inp = document.getElementById('profile-input');
+    inp.value = lastProfile;
+  }
+}
+
+/* ── ลืม PIN? ── */
+function showForgotInfo() {
+  const box = document.getElementById('forgot-info');
+  box.style.display = box.style.display==='block' ? 'none' : 'block';
+}
+
+/* ── Change PIN ── */
+function openChangePinModal() {
+  document.getElementById('cp-old').value  = '';
+  document.getElementById('cp-new1').value = '';
+  document.getElementById('cp-new2').value = '';
+  document.getElementById('cp-err').style.display = 'none';
+  document.getElementById('changepin-modal').classList.add('open');
+  setTimeout(() => document.getElementById('cp-old').focus(), 100);
+}
+function closeChangePinModal() {
+  document.getElementById('changepin-modal').classList.remove('open');
+}
+function cpBgClick(e) {
+  if(e.target === document.getElementById('changepin-modal')) closeChangePinModal();
+}
+function submitChangePin() {
+  const oldPin = document.getElementById('cp-old').value.trim();
+  const newPin1 = document.getElementById('cp-new1').value.trim();
+  const newPin2 = document.getElementById('cp-new2').value.trim();
+  const err = document.getElementById('cp-err');
+  err.style.display = 'none';
+
+  const profiles = getProfiles();
+  if(profiles[_profile]?.pin !== oldPin) {
+    err.textContent = '❌ PIN ปัจจุบันไม่ถูกต้อง';
+    err.style.display = 'block';
+    document.getElementById('cp-old').value = '';
+    document.getElementById('cp-old').focus();
+    return;
+  }
+  if(!/^\d{6}$/.test(newPin1)) {
+    err.textContent = 'PIN ใหม่ต้องเป็นตัวเลข 6 หลัก';
+    err.style.display = 'block'; return;
+  }
+  if(newPin1 !== newPin2) {
+    err.textContent = 'PIN ใหม่ไม่ตรงกัน';
+    err.style.display = 'block'; return;
+  }
+  if(newPin1 === oldPin) {
+    err.textContent = 'PIN ใหม่ต้องแตกต่างจาก PIN เดิม';
+    err.style.display = 'block'; return;
+  }
+
+  profiles[_profile].pin = newPin1;
+  saveProfiles(profiles);
+  // clear unlock cache → ต้องใส่ PIN ใหม่ครั้งถัดไป
+  const u = getUnlocks(); delete u[_profile]; saveUnlocks(u);
+  closeChangePinModal();
+
+  // แสดง success toast
+  showToast('✅ เปลี่ยน PIN เรียบร้อย');
+}
+
+/* ── Toast ── */
+function showToast(msg) {
+  let t = document.getElementById('toast');
+  if(!t) {
+    t = document.createElement('div');
+    t.id = 'toast';
+    t.style.cssText = 'position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(20px);background:rgba(30,30,30,.92);color:#fff;padding:10px 20px;border-radius:20px;font-size:14px;font-weight:500;opacity:0;transition:opacity .25s,transform .25s;z-index:99999;white-space:nowrap;pointer-events:none';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  requestAnimationFrame(() => {
+    t.style.opacity = '1'; t.style.transform = 'translateX(-50%) translateY(0)';
+    setTimeout(() => { t.style.opacity='0'; t.style.transform='translateX(-50%) translateY(20px)'; }, 2200);
+  });
+}
+
+/* ── Emergency Reset (กด logo 5 ครั้ง) ── */
+const MASTER_PASSWORD = 'condo@zaataan'; // เปลี่ยนได้ตามต้องการ
+let _logoTaps = 0, _logoTimer = null;
+
+function logoTap() {
+  // เปิดได้เฉพาะตอนอยู่หน้า PIN เท่านั้น
+  if(!document.getElementById('auth-s3').classList.contains('active')) return;
+  _logoTaps++;
+  clearTimeout(_logoTimer);
+  _logoTimer = setTimeout(() => { _logoTaps = 0; }, 2000);
+  if(_logoTaps >= 5) {
+    _logoTaps = 0;
+    emergencyOpen();
+  }
+}
+
+function emergencyOpen() {
+  document.getElementById('emg-profile-name').textContent = _profile || '?';
+  document.getElementById('emg-master-input').value = '';
+  document.getElementById('emg-err').style.display = 'none';
+  document.getElementById('emergency-modal').classList.add('open');
+  setTimeout(() => document.getElementById('emg-master-input').focus(), 100);
+}
+function emergencyClose() {
+  document.getElementById('emergency-modal').classList.remove('open');
+}
+function emergencyConfirm() {
+  const pw = document.getElementById('emg-master-input').value;
+  if(pw !== MASTER_PASSWORD) {
+    document.getElementById('emg-err').style.display = 'block';
+    document.getElementById('emg-master-input').value = '';
+    document.getElementById('emg-master-input').focus();
+    return;
+  }
+  // Master password ถูก → ล้าง PIN ของ profile นี้ออก แล้วให้สร้างใหม่
+  emergencyClose();
+  const profiles = getProfiles();
+  if(profiles[_profile]) {
+    delete profiles[_profile].pin;
+    saveProfiles(profiles);
+  }
+  const u = getUnlocks(); delete u[_profile]; saveUnlocks(u);
+  // ส่งไปหน้า create เพื่อตั้ง PIN ใหม่
+  document.getElementById('create-name').value = _profile;
+  document.getElementById('create-pin1').value = '';
+  document.getElementById('create-pin2').value = '';
+  document.getElementById('create-err').style.display = 'none';
+  // lock create-name ไม่ให้แก้ (reset mode)
+  document.getElementById('create-name').readOnly = true;
+  showAuthScreen('create');
+}
+
+/* ── Admin Panel ── */
+let _apTarget = null; // profile name being reset
+
+function openAdminPanel() {
+  document.getElementById('chip-dd').classList.remove('open');
+  document.removeEventListener('click', closeDropdown);
+  renderAdminList();
+  document.getElementById('admin-modal').classList.add('open');
+}
+function closeAdminPanel() {
+  document.getElementById('admin-modal').classList.remove('open');
+  _apTarget = null;
+  document.getElementById('ap-reset-form-wrap').style.display = 'none';
+}
+function adminModalBgClick(e) {
+  if(e.target === document.getElementById('admin-modal')) closeAdminPanel();
+}
+
+function renderAdminList() {
+  const profiles = getProfiles();
+  const list = document.getElementById('admin-list');
+  const names = Object.keys(profiles);
+  if(!names.length) {
+    list.innerHTML = '<div style="padding:16px;font-size:14px;color:var(--text3);text-align:center">ยังไม่มี profile</div>';
+    return;
+  }
+  list.innerHTML = names.map(name => {
+    const isAdmin = ADMIN_PROFILES.includes(name);
+    return `
+      <div class="admin-profile-row">
+        <div class="ap-avatar" style="${isAdmin?'background:var(--blue)':'background:var(--green-lt);color:var(--green)'}">${name.charAt(0).toUpperCase()}</div>
+        <div class="ap-info">
+          <div class="ap-name">${name}</div>
+          <div class="ap-sub">${isAdmin?'👑 Admin':'ผู้ใช้ทั่วไป'}</div>
+        </div>
+        ${isAdmin ? '' : `<button class="ap-reset-btn" onclick="adminResetPin('${name}')">Reset PIN</button>`}
+      </div>`;
+  }).join('');
+}
+
+function adminResetPin(name) {
+  _apTarget = name;
+  document.getElementById('ap-reset-label').innerHTML = `ตั้ง PIN ใหม่ให้ <strong>${name}</strong>`;
+  document.getElementById('ap-new-pin1').value = '';
+  document.getElementById('ap-new-pin2').value = '';
+  document.getElementById('ap-reset-err').style.display = 'none';
+  document.getElementById('ap-reset-form-wrap').style.display = 'block';
+  document.getElementById('ap-new-pin1').focus();
+}
+
+function cancelResetPin() {
+  _apTarget = null;
+  document.getElementById('ap-reset-form-wrap').style.display = 'none';
+}
+
+function confirmResetPin() {
+  if(!_apTarget) return;
+  const pin1 = document.getElementById('ap-new-pin1').value.trim();
+  const pin2 = document.getElementById('ap-new-pin2').value.trim();
+  const err  = document.getElementById('ap-reset-err');
+  err.style.display = 'none';
+  if(!/^\d{6}$/.test(pin1)) { err.textContent='PIN ต้องเป็นตัวเลข 6 หลัก'; err.style.display='block'; return; }
+  if(pin1 !== pin2)          { err.textContent='PIN ไม่ตรงกัน';            err.style.display='block'; return; }
+  const profiles = getProfiles();
+  if(!profiles[_apTarget]) { err.textContent='ไม่พบ profile นี้'; err.style.display='block'; return; }
+  const targetName = _apTarget;
+  profiles[targetName].pin = pin1;
+  saveProfiles(profiles);
+  // clear unlock cache so they must re-enter new PIN next time
+  const u = getUnlocks(); delete u[targetName]; saveUnlocks(u);
+  cancelResetPin();
+  renderAdminList();
+  showToast(`✅ Reset PIN ของ "${targetName}" เรียบร้อย`);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('profile-input')?.addEventListener('keydown', e=>{
+    if(e.key==='Enter') submitProfile();
+  });
+  try {
+    const s = JSON.parse(localStorage.getItem(CONDO_SESSION_KEY)||'{}');
+    if(s.profile && s.expires>Date.now()) { _profile=s.profile; launchApp(); return; }
+  } catch(e) {}
+  showAuthScreen('profile');
+});
+</script>
 </body>
 </html>
