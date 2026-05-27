@@ -7,8 +7,8 @@
 <style>
   :root {
     color-scheme: light;
-    --blue:    #1a6fc4;
-    --blue-lt: #e8f1fb;
+    --blue:    #6366f1;
+    --blue-lt: #eef2ff;
     --teal:    #0d9488;
     --teal-lt: #e6f7f5;
     --amber:   #d97706;
@@ -17,16 +17,16 @@
     --red-lt:  #fee2e2;
     --green:   #16a34a;
     --green-lt:#dcfce7;
-    --gray:    #374151;
-    --gray-lt: #f9fafb;
-    --border:  #e5e7eb;
+    --gray:    #1e293b;
+    --gray-lt: #f8fafc;
+    --border:  #e2e8f0;
     --radius:  14px;
-    --shadow:  0 2px 12px rgba(0,0,0,.08);
+    --shadow:  0 1px 3px rgba(0,0,0,.05),0 4px 16px rgba(0,0,0,.06);
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: #f3f4f6;
+    background: #f8fafc;
     color: var(--gray);
     font-size: 15px;
     line-height: 1.6;
@@ -43,17 +43,24 @@
   }
 
   /* KPI GRID */
-  .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+  .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
   .kpi {
     background: #fff;
     border-radius: var(--radius);
     box-shadow: var(--shadow);
-    padding: 12px;
-    text-align: center;
+    padding: 16px 18px;
+    text-align: left;
+    border-top: 3px solid var(--border);
+    transition: transform .15s, box-shadow .15s;
   }
-  .kpi .label  { font-size: 11px; color: #6b7280; margin-bottom: 2px; }
-  .kpi .number { font-size: 19px; font-weight: 800; }
-  .kpi .sub    { font-size: 10px; color: #9ca3af; margin-top: 2px; }
+  .kpi:hover { transform:translateY(-2px); box-shadow:0 4px 20px rgba(0,0,0,.09); }
+  .kpi.accent-green  { border-top-color: var(--green); }
+  .kpi.accent-amber  { border-top-color: var(--amber); }
+  .kpi.accent-blue   { border-top-color: var(--blue); }
+  .kpi.accent-teal   { border-top-color: var(--teal); }
+  .kpi .label  { font-size: 11px; font-weight: 600; color: #94a3b8; margin-bottom: 6px; text-transform:uppercase; letter-spacing:.4px; }
+  .kpi .number { font-size: 26px; font-weight: 800; line-height:1.1; }
+  .kpi .sub    { font-size: 11px; color: #94a3b8; margin-top: 4px; }
 
   /* ROOM MANAGEMENT CARD */
   .room-card {
@@ -204,7 +211,7 @@
     align-items: flex-start;
   }
   .alert.warn { background: var(--amber-lt); color: #92400e; }
-  .alert.info { background: var(--blue-lt);  color: #1e40af; }
+  .alert.info { background: var(--blue-lt);  color: #4338ca; }
   .alert .icon { font-size: 15px; flex-shrink: 0; padding-top: 1px; }
 
   /* SAVE BTN */
@@ -506,40 +513,52 @@
 
   /* ── TOPBAR ── */
   .topbar {
-    position:fixed;top:0;left:0;right:0;height:52px;
+    position:fixed;top:0;left:0;right:0;height:56px;
     background:#fff;border-bottom:1px solid var(--border);
-    display:flex;align-items:center;gap:8px;padding:0 14px;z-index:100;
+    box-shadow:0 1px 8px rgba(99,102,241,.06);
+    display:flex;align-items:center;gap:8px;padding:0 20px;z-index:100;
   }
-  .topbar-logo { font-size:15px;font-weight:800;color:var(--blue);letter-spacing:-.3px;white-space:nowrap }
-  .topbar-sub  { font-size:11px;color:#9ca3af;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis }
+  .topbar-logo { font-size:16px;font-weight:800;color:var(--blue);letter-spacing:-.3px;white-space:nowrap }
+  .topbar-sub  { font-size:11px;color:#94a3b8;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis }
 
   /* ── SIDEBAR ── */
-  --sidebar-w: 210px;
   .sidebar {
-    position:fixed;top:52px;left:0;bottom:0;width:210px;
-    background:#fff;border-right:1px solid var(--border);
-    overflow-y:auto;z-index:90;padding:10px 0;
+    position:fixed;top:56px;left:0;bottom:0;width:220px;
+    background:linear-gradient(180deg,#f5f3ff 0%,#f8fafc 60%);
+    border-right:1px solid #e8e6f8;
+    overflow-y:auto;z-index:90;padding:16px 0 20px;
+  }
+  .sidebar-brand {
+    padding:0 16px 14px;
+    font-size:10px;font-weight:700;letter-spacing:.8px;
+    color:#a5b4fc;text-transform:uppercase;
+    border-bottom:1px solid #ede9fe;margin-bottom:8px;
   }
   .nav-item {
-    display:flex;align-items:center;gap:8px;padding:9px 14px;
-    font-size:13px;font-weight:500;color:#6b7280;cursor:pointer;
-    border-radius:8px;margin:0 6px;transition:all .15s;
+    display:flex;align-items:center;gap:10px;padding:10px 16px;
+    font-size:13px;font-weight:500;color:#64748b;cursor:pointer;
+    border-radius:10px;margin:1px 8px;transition:all .15s;
+    border-left:3px solid transparent;
   }
-  .nav-item:hover { background:var(--gray-lt);color:var(--gray) }
-  .nav-item.active { background:var(--blue-lt);color:var(--blue);font-weight:600 }
-  .nav-item .ni-icon { font-size:16px;width:20px;text-align:center }
-  .nav-sep { height:1px;background:var(--border);margin:6px 10px }
+  .nav-item:hover { background:rgba(99,102,241,.07);color:#4f46e5 }
+  .nav-item.active {
+    background:linear-gradient(135deg,#eef2ff,#f0f0ff);
+    color:#4f46e5;font-weight:700;
+    border-left-color:#6366f1;
+    box-shadow:0 1px 6px rgba(99,102,241,.12);
+  }
+  .nav-item .ni-icon { font-size:17px;width:22px;text-align:center;flex-shrink:0 }
+  .nav-sep { height:1px;background:#ede9fe;margin:8px 16px }
 
   /* ── MAIN AREA ── */
-  .main { margin-top:52px;margin-left:210px;padding:16px;min-height:calc(100vh - 52px) }
+  .main { margin-top:56px;margin-left:220px;padding:24px;min-height:calc(100vh - 56px) }
   .page { display:none }
-  .page.active { display:block }
+  .page.active { display:block;max-width:900px }
 
   /* ── PAGE TITLE ── */
   .page-title {
-    font-size:14px;font-weight:700;color:var(--gray);
-    margin-bottom:12px;display:flex;align-items:center;gap:6px;
-    padding-bottom:10px;border-bottom:2px solid var(--border);
+    font-size:18px;font-weight:800;color:var(--gray);
+    margin-bottom:20px;display:flex;align-items:center;gap:8px;
   }
 
   /* ── MOBILE NAV ── */
@@ -557,16 +576,19 @@
   .mob-nav-item .mi { font-size:20px }
   @media(max-width:600px) {
     .sidebar { display:none }
-    .main { margin-left:0;padding:12px 10px 70px }
+    .main { margin-left:0;padding:16px 12px 70px;margin-top:56px }
     .mobile-nav { display:flex !important }
     .topbar-sub { display:none }
+    .page.active { max-width:100% }
+    .kpi-grid { gap:8px }
+    .kpi .number { font-size:20px }
   }
 
 
 /* ── AUTH SYSTEM ── */
 #auth-overlay{
   position:fixed;inset:0;z-index:9999;
-  background:linear-gradient(135deg,#1a6fc4 0%,#0d9488 100%);
+  background:linear-gradient(135deg,#312e81 0%,#4f46e5 55%,#818cf8 100%);
   display:flex;align-items:center;justify-content:center;
 }
 .auth-card{
@@ -576,7 +598,7 @@
 }
 .auth-screen{display:none}.auth-screen.active{display:block}
 .auth-logo{font-size:48px;margin-bottom:6px}
-.auth-title{font-size:20px;font-weight:800;color:#1a6fc4;margin-bottom:4px}
+.auth-title{font-size:20px;font-weight:800;color:#4f46e5;margin-bottom:4px}
 .auth-sub{font-size:13px;color:#6b7280;margin-bottom:18px;line-height:1.5}
 .auth-err{font-size:12px;color:#dc2626;margin-top:10px;padding:8px 10px;
   background:#fee2e2;border-radius:8px;display:none}
@@ -586,13 +608,13 @@
   font-size:14px;outline:none;margin-bottom:10px;text-align:center;
   transition:border-color .2s;font-family:inherit;
 }
-.auth-input:focus{border-color:#1a6fc4}
+.auth-input:focus{border-color:#6366f1}
 .auth-btn{
-  width:100%;padding:12px;background:#1a6fc4;color:#fff;border:none;
+  width:100%;padding:12px;background:#6366f1;color:#fff;border:none;
   border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;
   margin-bottom:8px;font-family:inherit;transition:background .2s;
 }
-.auth-btn:hover{background:#155da0}
+.auth-btn:hover{background:#4f46e5}
 .auth-btn.purple{background:#7c3aed}
 .auth-btn.purple:hover{background:#6d28d9}
 .auth-link-btn{
@@ -611,7 +633,7 @@
 .pin-dots{display:flex;gap:12px;justify-content:center;margin:16px 0}
 .pin-dot{width:13px;height:13px;border-radius:50%;background:#e5e7eb;
   border:2px solid #d1d5db;transition:all .15s}
-.pin-dot.filled{background:#1a6fc4;border-color:#1a6fc4;transform:scale(1.1)}
+.pin-dot.filled{background:#6366f1;border-color:#6366f1;transform:scale(1.1)}
 .pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
 .pin-key{
   padding:13px 8px;background:#f9fafb;border:1.5px solid #e5e7eb;
@@ -629,48 +651,34 @@
 .user-name{font-size:12px;font-weight:600;color:#fff;max-width:110px;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 </style>
-<script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
 
 <!-- AUTH OVERLAY -->
 <div id="auth-overlay">
   <div class="auth-card">
-    <!-- S1: Google Login -->
-    <div id="auth-s1" class="auth-screen active">
+    <!-- S2: Profile -->
+    <div id="auth-s2" class="auth-screen active">
       <div class="auth-logo">🏠</div>
       <div class="auth-title">The Base เชิงทะเล</div>
-      <div class="auth-sub">ระบบจัดการห้องพัก<br>สำหรับเจ้าของเท่านั้น</div>
-      <div id="g_id_signin" style="display:flex;justify-content:center;min-height:44px"></div>
-      <div class="auth-loading" id="auth-loading">กำลังโหลด...</div>
-      <div class="auth-err" id="auth-err">❌ คุณไม่มีสิทธิ์เข้าใช้งาน<br><small>กรุณาติดต่อเจ้าของ</small></div>
-    </div>
-    <!-- S2: Profile -->
-    <div id="auth-s2" class="auth-screen">
-      <div class="auth-logo">👤</div>
-      <div class="auth-title">เลือก Profile</div>
-      <div class="auth-user-badge" id="auth-badge">
-        <img id="badge-avatar" src="" alt=""><span id="badge-name"></span>
-      </div>
+      <div class="auth-sub" style="margin-bottom:12px">เลือกหรือพิมพ์ชื่อ profile</div>
       <!-- รายชื่อ profiles -->
-      <div id="tb-profile-list-auth" style="width:100%;display:flex;flex-direction:column;gap:8px;max-height:220px;overflow-y:auto"></div>
+      <div id="tb-profile-list-auth" style="width:100%;display:flex;flex-direction:column;gap:8px;max-height:200px;overflow-y:auto"></div>
       <div id="tb-no-profile-msg" style="display:none;font-size:13px;color:#9ca3af;text-align:center;padding:6px 0">ยังไม่มี profile — สร้างใหม่เลย</div>
       <div class="auth-err" id="profile-err"></div>
-      <!-- พิมพ์ชื่อ profile (สำหรับเครื่องใหม่ / แชร์กับคนอื่น) -->
-      <div style="width:100%;margin-top:4px">
+      <div style="width:100%;margin-top:8px">
         <div style="font-size:11px;color:#9ca3af;text-align:center;margin-bottom:6px">หรือพิมพ์ชื่อ profile ที่รู้จัก</div>
         <div style="display:flex;gap:8px;width:100%">
           <input type="text" id="profile-input" autocomplete="off" spellcheck="false"
-            placeholder="ชื่อ profile เช่น zaataan"
-            style="flex:1;padding:10px 12px;border:2px solid #e5e7eb;border-radius:10px;font-size:14px;outline:none;color:#1f2937"
-            onfocus="this.style.borderColor='#1a6fc4'"
-            onblur="this.style.borderColor='#e5e7eb'">
-          <button onclick="submitProfile()" style="padding:10px 14px;background:#1a6fc4;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap">เข้า</button>
+            placeholder="พิมพ์ชื่อ profile"
+            style="flex:1;padding:10px 12px;border:2px solid #e2e8f0;border-radius:10px;font-size:14px;outline:none;color:#1e293b"
+            onfocus="this.style.borderColor='#6366f1'"
+            onblur="this.style.borderColor='#e2e8f0'">
+          <button onclick="submitProfile()" style="padding:10px 14px;background:#6366f1;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap">เข้า</button>
         </div>
       </div>
       <div class="auth-divider">หรือ</div>
       <button class="auth-btn purple" onclick="showAuthScreen('create')">+ สร้าง Profile ใหม่</button>
-      <button class="auth-link-btn" onclick="tbSignOut()" style="margin-top:8px">ออกจาก Google</button>
     </div>
     <!-- S3: PIN -->
     <div id="auth-s3" class="auth-screen">
@@ -680,6 +688,7 @@
       <div class="pin-dots" id="pin-dots">
         <span class="pin-dot" id="pd0"></span><span class="pin-dot" id="pd1"></span>
         <span class="pin-dot" id="pd2"></span><span class="pin-dot" id="pd3"></span>
+        <span class="pin-dot" id="pd4"></span><span class="pin-dot" id="pd5"></span>
       </div>
       <div class="pin-pad" id="pin-pad"></div>
       <div class="auth-err" id="pin-err"></div>
@@ -691,11 +700,11 @@
       <div class="auth-title">สร้าง Profile ใหม่</div>
       <div class="auth-sub">ข้อมูลแต่ละ profile แยกกันทั้งหมด</div>
       <input type="text" id="create-name" class="auth-input"
-        placeholder="ชื่อ profile เช่น zaataan" autocomplete="off" spellcheck="false">
+        placeholder="ชื่อ profile" autocomplete="off" spellcheck="false">
       <input type="password" id="create-pin1" class="auth-input"
-        placeholder="ตั้ง PIN 4 หลัก" maxlength="4" inputmode="numeric" pattern="[0-9]*">
+        placeholder="ตั้ง PIN 6 หลัก" maxlength="6" inputmode="numeric" pattern="[0-9]*">
       <input type="password" id="create-pin2" class="auth-input"
-        placeholder="ยืนยัน PIN" maxlength="4" inputmode="numeric" pattern="[0-9]*">
+        placeholder="ยืนยัน PIN" maxlength="6" inputmode="numeric" pattern="[0-9]*">
       <button class="auth-btn purple" onclick="createProfile()">สร้าง Profile</button>
       <div class="auth-err" id="create-err"></div>
       <button class="auth-link-btn" onclick="showAuthScreen('profile')" style="margin-top:8px">← กลับ</button>
@@ -709,14 +718,14 @@
   <div class="topbar-logo">🏠 The Base</div>
   <div class="topbar-sub">เชิงทะเล ภูเก็ต · by Sansiri</div>
   <div id="tb-profile-area" style="display:none;position:relative;flex-shrink:0;margin-left:auto">
-    <div id="tb-profile-chip" onclick="toggleTBDropdown()" style="display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.9);border-radius:20px;padding:5px 11px 5px 13px;font-size:12px;font-weight:700;color:#1a3a5c;cursor:pointer;user-select:none;letter-spacing:.3px">
+    <div id="tb-profile-chip" onclick="toggleTBDropdown()" style="display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.9);border-radius:20px;padding:5px 11px 5px 13px;font-size:12px;font-weight:700;color:#3730a3;cursor:pointer;user-select:none;letter-spacing:.3px">
       👤 <span id="tb-profile-chip-name"></span><span style="font-size:9px;opacity:.5;margin-left:2px">▾</span>
     </div>
     <div id="tb-profile-dropdown" style="display:none;position:absolute;top:calc(100% + 8px);right:0;background:#fff;border-radius:14px;box-shadow:0 6px 28px rgba(0,0,0,.18);min-width:180px;z-index:300;overflow:hidden">
       <div style="padding:6px 8px 4px 12px;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;margin-top:4px">Profiles</div>
       <div id="tb-profile-list" style="padding:4px 6px"></div>
       <div style="border-top:1px solid #f3f4f6;padding:6px">
-        <button onclick="document.getElementById('tb-profile-dropdown').style.display='none';loadData()" style="width:100%;text-align:left;padding:8px 12px;border:none;background:none;color:#3b82f6;font-size:13px;cursor:pointer;border-radius:8px">🔄 โหลดข้อมูลจาก Sheets</button>
+        <button onclick="document.getElementById('tb-profile-dropdown').style.display='none';loadData()" style="width:100%;text-align:left;padding:8px 12px;border:none;background:none;color:#6366f1;font-size:13px;cursor:pointer;border-radius:8px">🔄 โหลดข้อมูลจาก Sheets</button>
         <button onclick="deleteTBProfile()" style="width:100%;text-align:left;padding:8px 12px;border:none;background:none;color:#dc2626;font-size:13px;cursor:pointer;border-radius:8px">🗑 ลบ profile นี้</button>
         <button onclick="tbSignOut()" style="width:100%;text-align:left;padding:8px 12px;border:none;background:none;color:#6b7280;font-size:13px;cursor:pointer;border-radius:8px">↩ ออกจาก Google</button>
       </div>
@@ -730,12 +739,14 @@
 
 <!-- SIDEBAR -->
 <nav class="sidebar">
+  <div class="sidebar-brand">เมนูหลัก</div>
   <div class="nav-item active" data-page="overview" onclick="navTo('overview',this)">
     <span class="ni-icon">📊</span>ภาพรวม
   </div>
   <div class="nav-item" data-page="pool" onclick="navTo('pool',this)">
     <span class="ni-icon">🏦</span>กองกลาง
   </div>
+  <div class="nav-sep"></div>
   <div class="nav-item" data-page="rooms" onclick="navTo('rooms',this)">
     <span class="ni-icon">🛏</span>จัดการห้อง
   </div>
@@ -764,38 +775,38 @@
   <div class="page-title">📊 ภาพรวมวันนี้</div>
 
   <div class="kpi-grid">
-    <div class="kpi">
+    <div class="kpi accent-green">
       <div class="label">ห้องที่มีคนเช่า</div>
       <div class="number" id="kpi-rented" style="color:var(--green)">— / 4</div>
       <div class="sub">ห้อง</div>
     </div>
-    <div class="kpi">
+    <div class="kpi accent-green">
       <div class="label">รายได้เช่าจริง/เดือน</div>
       <div class="number" id="kpi-income" style="color:var(--green)">—</div>
       <div class="sub">บาท</div>
     </div>
-    <div class="kpi">
+    <div class="kpi accent-amber">
       <div class="label">ผ่อนแบงค์รวม/เดือน</div>
-      <div class="number" id="kpi-mortgage" style="color:var(--amber)">40,332</div>
+      <div class="number" id="kpi-mortgage" style="color:var(--amber)">—</div>
       <div class="sub">บาท (4 ห้อง)</div>
     </div>
-    <div class="kpi" id="kpi-deposit-wrap" style="display:none">
-      <div class="label">มัดจำรวม</div>
-      <div class="number" id="kpi-deposit" style="color:var(--teal)">—</div>
-      <div class="sub">บาท (ผู้เช่าทุกห้อง)</div>
-    </div>
-    <div class="kpi">
+    <div class="kpi accent-blue">
       <div class="label">Net Cash Flow</div>
       <div class="number" id="kpi-net">—</div>
       <div class="sub">บาท/เดือน</div>
     </div>
   </div>
+  <div class="kpi accent-teal" id="kpi-deposit-wrap" style="display:none;margin-bottom:16px">
+    <div class="label">มัดจำรวม</div>
+    <div class="number" id="kpi-deposit" style="color:var(--teal)">—</div>
+    <div class="sub">บาท (ผู้เช่าทุกห้อง)</div>
+  </div>
 
   <div class="card">
-    <div style="font-size:13px;font-weight:600;margin-bottom:8px;color:#6b7280">อัตราการเช่า (Occupancy)</div>
+    <div style="font-size:12px;font-weight:700;margin-bottom:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px">อัตราการเช่า (Occupancy)</div>
     <div class="occ-bar-wrap">
-      <div class="occ-bar"><div class="occ-fill" id="occ-fill" style="width:0%"></div></div>
-      <div class="occ-label" id="occ-label">0 / 4 ห้อง</div>
+      <div class="occ-bar" style="height:8px;border-radius:4px"><div class="occ-fill" id="occ-fill" style="width:0%"></div></div>
+      <div class="occ-label" id="occ-label" style="font-size:13px;font-weight:600;color:#64748b;margin-top:6px">0 / 4 ห้อง (0%)</div>
     </div>
   </div>
 </div>
@@ -2271,13 +2282,8 @@ const TB_PROFILES_KEY= 'tb_profiles';
 const TB_SESSION_KEY = 'tb_session';
 const TB_UNLOCKS_KEY = 'tb_pin_unlocks'; // cache PIN unlock ต่อ profile (24 ชม.)
 
-let _gUser   = null;
 let _profile = null;
 let _pinBuf  = '';
-
-function tbParseJwt(t) {
-  try { return JSON.parse(atob(t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))); } catch(e){ return null; }
-}
 function getProfiles() {
   try { return JSON.parse(localStorage.getItem(TB_PROFILES_KEY)||'{}'); } catch(e){ return {}; }
 }
@@ -2290,7 +2296,7 @@ function profileBundleKey() { return 'thebase_bundle_' + (_profile||'default'); 
 function profilePath()      { return SHEETS_PATH + '_' + (_profile||'default'); }
 
 function showAuthScreen(name) {
-  const map = {login:'auth-s1', profile:'auth-s2', pin:'auth-s3', create:'auth-s4'};
+  const map = {profile:'auth-s2', pin:'auth-s3', create:'auth-s4'};
   document.querySelectorAll('.auth-screen').forEach(s => s.classList.remove('active'));
   const el = document.getElementById(map[name]);
   if(el) el.classList.add('active');
@@ -2305,26 +2311,6 @@ function showAuthScreen(name) {
     document.getElementById('create-err').style.display = 'none';
     setTimeout(()=>document.getElementById('create-name').focus(),150);
   }
-}
-
-function onGoogleSignIn(response) {
-  const payload = tbParseJwt(response.credential);
-  if(!payload) return;
-  const email = (payload.email||'').toLowerCase();
-  if(!ALLOWED_TB.includes(email)) {
-    document.getElementById('auth-err').style.display = 'block';
-    document.getElementById('auth-loading').style.display = 'none';
-    return;
-  }
-  _gUser = { email, name: payload.name, picture: payload.picture };
-  try { localStorage.setItem('tb_guser', JSON.stringify(_gUser)); } catch(e){}
-  goToProfileScreen();
-}
-
-function goToProfileScreen() {
-  document.getElementById('badge-name').textContent = _gUser.name || _gUser.email;
-  if(_gUser.picture) document.getElementById('badge-avatar').src = _gUser.picture;
-  showAuthScreen('profile');
 }
 
 function renderTBProfileListAuth() {
@@ -2344,11 +2330,11 @@ function renderTBProfileListAuth() {
                padding:11px 14px;border:2px solid #e5e7eb;border-radius:12px;
                background:#fff;cursor:pointer;font-size:14px;font-weight:600;
                color:#1f2937;text-align:left"
-        onmouseover="this.style.borderColor='#1a6fc4';this.style.background='#e8f1fb'"
-        onmouseout="this.style.borderColor='#e5e7eb';this.style.background='#fff'">
-        <span style="width:36px;height:36px;border-radius:50%;background:#e8f1fb;
+        onmouseover="this.style.borderColor='#6366f1';this.style.background='#eef2ff'"
+        onmouseout="this.style.borderColor='#e2e8f0';this.style.background='#fff'">
+        <span style="width:36px;height:36px;border-radius:50%;background:#eef2ff;
                      display:flex;align-items:center;justify-content:center;
-                     font-size:15px;font-weight:800;color:#1a6fc4;flex-shrink:0">
+                     font-size:15px;font-weight:800;color:#6366f1;flex-shrink:0">
           ${name[0].toUpperCase()}
         </span>
         <span>${name}</span>
@@ -2429,7 +2415,7 @@ function createProfile() {
   const errEl = document.getElementById('create-err');
   if(!name)                   { errEl.textContent='กรุณาใส่ชื่อ profile';              errEl.style.display='block'; return; }
   if(!/^[a-z0-9_]+$/.test(name)) { errEl.textContent='ใช้ได้แค่ a-z 0-9 _';          errEl.style.display='block'; return; }
-  if(!/^\d{4}$/.test(p1))   { errEl.textContent='PIN ต้องเป็นตัวเลข 4 หลัก';       errEl.style.display='block'; return; }
+  if(!/^\d{6}$/.test(p1))   { errEl.textContent='PIN ต้องเป็นตัวเลข 6 หลัก';       errEl.style.display='block'; return; }
   if(p1 !== p2)               { errEl.textContent='PIN ทั้งสองไม่ตรงกัน';            errEl.style.display='block'; return; }
   const profiles = getProfiles();
   if(profiles[name])          { errEl.textContent='มี profile "'+name+'" อยู่แล้ว';  errEl.style.display='block'; return; }
@@ -2450,16 +2436,16 @@ function buildPinPad() {
   }).join('');
 }
 function updatePinDots() {
-  [0,1,2,3].forEach(i => {
+  [0,1,2,3,4,5].forEach(i => {
     const el = document.getElementById('pd'+i);
     if(el) el.className = 'pin-dot' + (i < _pinBuf.length ? ' filled' : '');
   });
 }
 function pinKey(k) {
   if(k==='del') { _pinBuf = _pinBuf.slice(0,-1); updatePinDots(); return; }
-  if(_pinBuf.length >= 4) return;
+  if(_pinBuf.length >= 6) return;
   _pinBuf += k; updatePinDots();
-  if(_pinBuf.length === 4) setTimeout(verifyPin, 150);
+  if(_pinBuf.length === 6) setTimeout(verifyPin, 150);
 }
 function verifyPin() {
   const profiles = getProfiles();
@@ -2477,7 +2463,7 @@ function verifyPin() {
 function saveTBSession() {
   try {
     localStorage.setItem(TB_SESSION_KEY, JSON.stringify({
-      googleUser: _gUser, profile: _profile,
+      profile: _profile,
       expires: Date.now() + 7*24*60*60*1000
     }));
   } catch(e){}
@@ -2486,11 +2472,6 @@ function saveTBSession() {
 function launchApp() {
   window.ACTIVE_PROFILE = _profile;
   document.getElementById('auth-overlay').style.display = 'none';
-  const pill = document.getElementById('user-pill');
-  if(pill) {
-    pill.style.display = 'flex';
-    if(_gUser?.picture) document.getElementById('user-avatar').src = _gUser.picture;
-  }
   const area = document.getElementById('tb-profile-area');
   if(area) {
     area.style.display = 'flex';
@@ -2517,8 +2498,8 @@ function toggleTBDropdown() {
       const isUnlocked = isTBUnlocked(name);
       return `<button onclick="tbSwitchToProfile('${name}')"
         style="width:100%;text-align:left;padding:9px 12px;border:none;
-               background:${isActive?'#eff6ff':'none'};
-               color:${isActive?'#1d4ed8':'#1f2937'};
+               background:${isActive?'#eef2ff':'none'};
+               color:${isActive?'#4f46e5':'#1e293b'};
                font-size:13px;font-weight:${isActive?'700':'500'};
                cursor:pointer;border-radius:8px;display:flex;align-items:center;gap:8px">
         <span style="width:14px">${isActive?'✓':''}</span>
@@ -2579,49 +2560,23 @@ function deleteTBProfile() {
   try { localStorage.removeItem(TB_SESSION_KEY); } catch(e){}
   location.reload();
 }
-function tbSignOut() {
-  // ออกจาก Google ด้วย
-  if(!confirm('ออกจาก Google ด้วยใช่มั้ย?')) return;
-  try { localStorage.removeItem(TB_SESSION_KEY); localStorage.removeItem('tb_guser'); } catch(e){}
-  location.reload();
-}
 function signOut() { logoutProfile(); }
 
 // ── Init ──
 (function initTBAuth() {
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('profile-input')?.addEventListener('keydown', e => {
+      if(e.key==='Enter') submitProfile();
+    });
+  });
   try {
     const sess = JSON.parse(localStorage.getItem(TB_SESSION_KEY)||'{}');
-    if(sess.profile && sess.googleUser && sess.expires > Date.now()) {
-      _gUser = sess.googleUser; _profile = sess.profile;
+    if(sess.profile && sess.expires > Date.now()) {
+      _profile = sess.profile;
       launchApp(); return;
     }
   } catch(e){}
-  try {
-    const gu = JSON.parse(localStorage.getItem('tb_guser')||'{}');
-    if(gu.email && ALLOWED_TB.includes(gu.email.toLowerCase())) {
-      _gUser = gu; goToProfileScreen(); return;
-    }
-  } catch(e){}
-  let _gisRetry = 0;
-  function tryGIS() {
-    if(typeof google !== 'undefined' && google.accounts) {
-      document.getElementById('auth-loading').style.display = 'none';
-      try {
-        google.accounts.id.initialize({ client_id: TB_CLIENT_ID, callback: onGoogleSignIn });
-        google.accounts.id.renderButton(document.getElementById('g_id_signin'),
-          { theme:'outline', size:'large', width:270, locale:'th' });
-      } catch(err) {
-        document.getElementById('auth-loading').innerHTML =
-          '⚠️ โหลด Google Sign-In ไม่ได้<br><button onclick="location.reload()" style="margin-top:10px;padding:8px 18px;border-radius:8px;border:none;background:#1a6fc4;color:#fff;cursor:pointer;font-size:14px">🔄 ลองใหม่</button>';
-      }
-    } else if(_gisRetry++ < 50) {
-      setTimeout(tryGIS, 300);
-    } else {
-      document.getElementById('auth-loading').innerHTML =
-        '⚠️ โหลด Google Sign-In ไม่ได้<br><small style="color:#9ca3af">ลองตรวจสอบการเชื่อมต่ออินเทอร์เน็ต</small><br><button onclick="location.reload()" style="margin-top:10px;padding:8px 18px;border-radius:8px;border:none;background:#1a6fc4;color:#fff;cursor:pointer;font-size:14px">🔄 ลองใหม่</button>';
-    }
-  }
-  tryGIS();
+  document.addEventListener('DOMContentLoaded', () => showAuthScreen('profile'));
 })();
 
 </script>

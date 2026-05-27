@@ -6,27 +6,28 @@
 <title>Property Manager — จัดการอสังหาริมทรัพย์</title>
 <style>
 :root {
-  --blue:#3b82f6; --blue-lt:#eff6ff;
+  --blue:#6366f1; --blue-lt:#eef2ff;
   --teal:#0d9488; --teal-lt:#f0fdfa;
   --green:#16a34a; --green-lt:#f0fdf4;
   --amber:#d97706; --amber-lt:#fffbeb;
   --red:#dc2626;   --red-lt:#fef2f2;
   --purple:#7c3aed; --purple-lt:#f5f3ff;
-  --gray:#1f2937; --gray-lt:#f9fafb;
-  --border:#e5e7eb;
-  --radius:14px; --shadow:0 1px 6px rgba(0,0,0,.08);
+  --gray:#1e293b; --gray-lt:#f8fafc;
+  --border:#e2e8f0;
+  --radius:14px; --shadow:0 1px 3px rgba(0,0,0,.05),0 4px 16px rgba(0,0,0,.06);
   --sidebar-w:220px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f1f5f9;color:var(--gray);min-height:100vh}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f8fafc;color:var(--gray);min-height:100vh}
 
 /* ── TOP BAR ── */
 .topbar{
-  position:fixed;top:0;left:0;right:0;height:52px;
+  position:fixed;top:0;left:0;right:0;height:56px;
   background:#fff;border-bottom:1px solid var(--border);
-  display:flex;align-items:center;gap:10px;padding:0 14px;z-index:100;
+  box-shadow:0 1px 8px rgba(99,102,241,.06);
+  display:flex;align-items:center;gap:10px;padding:0 20px;z-index:100;
 }
-.topbar-logo{font-size:15px;font-weight:800;color:var(--blue);letter-spacing:-.3px}
+.topbar-logo{font-size:16px;font-weight:800;color:var(--blue);letter-spacing:-.3px}
 .topbar-sub{font-size:11px;color:#9ca3af;flex:1}
 .prop-selector{
   display:flex;align-items:center;gap:6px;flex:1;
@@ -42,43 +43,57 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 
 /* ── SIDEBAR ── */
 .sidebar{
-  position:fixed;top:52px;left:0;bottom:0;width:var(--sidebar-w);
-  background:#fff;border-right:1px solid var(--border);
-  overflow-y:auto;z-index:90;padding:10px 0;
+  position:fixed;top:56px;left:0;bottom:0;width:var(--sidebar-w);
+  background:linear-gradient(180deg,#f5f3ff 0%,#f8fafc 60%);
+  border-right:1px solid #e8e6f8;
+  overflow-y:auto;z-index:90;padding:16px 0 20px;
 }
+.sidebar-brand{font-size:10px;font-weight:700;color:#a5b4fc;text-transform:uppercase;letter-spacing:1px;padding:0 18px 10px}
 .nav-item{
-  display:flex;align-items:center;gap:8px;padding:9px 14px;
+  display:flex;align-items:center;gap:8px;padding:9px 16px;
   font-size:13px;font-weight:500;color:#6b7280;cursor:pointer;
-  border-radius:8px;margin:0 6px;transition:all .15s;
+  border-left:3px solid transparent;
+  transition:all .15s;
 }
-.nav-item:hover{background:var(--gray-lt);color:var(--gray)}
-.nav-item.active{background:var(--blue-lt);color:var(--blue);font-weight:600}
+.nav-item:hover{background:rgba(99,102,241,.06);color:var(--blue)}
+.nav-item.active{
+  background:linear-gradient(90deg,rgba(99,102,241,.12) 0%,transparent 100%);
+  color:var(--blue);font-weight:700;
+  border-left-color:var(--blue);
+  box-shadow:inset 0 1px 0 rgba(99,102,241,.08),inset 0 -1px 0 rgba(99,102,241,.08);
+}
 .nav-item .ni-icon{font-size:16px;width:20px;text-align:center}
-.nav-sep{height:1px;background:var(--border);margin:6px 10px}
+.nav-sep{height:1px;background:var(--border);margin:8px 14px}
 .nav-group-label{font-size:10px;font-weight:700;color:#9ca3af;padding:6px 20px 2px;text-transform:uppercase;letter-spacing:.5px}
 
 /* ── MAIN ── */
-.main{margin-top:52px;margin-left:var(--sidebar-w);padding:16px;min-height:calc(100vh - 52px)}
+.main{margin-top:56px;margin-left:var(--sidebar-w);padding:24px;min-height:calc(100vh - 56px)}
 .page{display:none}
-.page.active{display:block}
+.page.active{display:block;max-width:960px}
+.page-title{font-size:18px;font-weight:800;color:var(--gray);margin-bottom:20px;letter-spacing:-.3px}
 
 /* ── CARDS ── */
 .card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:14px;margin-bottom:12px}
 .card-title{font-size:14px;font-weight:700;color:var(--gray);margin-bottom:12px;display:flex;align-items:center;gap:6px}
 
 /* ── KPI ROW ── */
-.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:12px}
-.kpi{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:12px 14px}
-.kpi .label{font-size:11px;color:#6b7280;font-weight:600;margin-bottom:4px}
-.kpi .number{font-size:20px;font-weight:800;line-height:1.1}
-.kpi .sub{font-size:11px;color:#9ca3af;margin-top:2px}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px}
+.kpi{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:14px 16px;border-top:3px solid var(--border);transition:transform .15s,box-shadow .15s}
+.kpi:hover{transform:translateY(-2px);box-shadow:0 4px 20px rgba(0,0,0,.09)}
+.kpi.accent-green{border-top-color:var(--green)}
+.kpi.accent-blue{border-top-color:var(--blue)}
+.kpi.accent-amber{border-top-color:var(--amber)}
+.kpi.accent-teal{border-top-color:var(--teal)}
+.kpi .label{font-size:10px;color:#9ca3af;font-weight:700;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+.kpi .number{font-size:22px;font-weight:800;line-height:1.1}
+.kpi .sub{font-size:11px;color:#9ca3af;margin-top:4px}
 
 /* ── BUTTONS ── */
 .btn{display:inline-flex;align-items:center;gap:5px;padding:7px 13px;border-radius:9px;
   font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .15s}
 .btn-blue{background:var(--blue);color:#fff}
 .btn-green{background:var(--green);color:#fff}
-.btn-blue:hover{background:#2563eb}
+.btn-blue:hover{background:#4f46e5}
 .btn-teal{background:var(--teal);color:#fff}
 .btn-teal:hover{background:#0f766e}
 .btn-red{background:var(--red-lt);color:var(--red);border:1.5px solid rgba(220,38,38,.25)}
@@ -278,7 +293,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 
 /* ── SETUP BANNER ── */
 .setup-banner{
-  background:linear-gradient(135deg,#1e40af,#3b82f6);
+  background:linear-gradient(135deg,#312e81,#6366f1);
   color:#fff;padding:16px 20px;border-radius:var(--radius);
   margin-bottom:14px;
 }
@@ -301,7 +316,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 /* ── AUTH SYSTEM ── */
 #auth-overlay{
   position:fixed;inset:0;z-index:9999;
-  background:linear-gradient(135deg,#1a6fc4 0%,#0d9488 100%);
+  background:linear-gradient(135deg,#312e81 0%,#4f46e5 55%,#818cf8 100%);
   display:flex;align-items:center;justify-content:center;
 }
 .auth-card{
@@ -311,7 +326,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 }
 .auth-screen{display:none}.auth-screen.active{display:block}
 .auth-logo{font-size:48px;margin-bottom:6px}
-.auth-title{font-size:20px;font-weight:800;color:#1a6fc4;margin-bottom:4px}
+.auth-title{font-size:20px;font-weight:800;color:#4f46e5;margin-bottom:4px}
 .auth-sub{font-size:13px;color:#6b7280;margin-bottom:18px;line-height:1.5}
 .auth-err{font-size:12px;color:#dc2626;margin-top:10px;padding:8px 10px;
   background:#fee2e2;border-radius:8px;display:none}
@@ -321,13 +336,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   font-size:14px;outline:none;margin-bottom:10px;text-align:center;
   transition:border-color .2s;font-family:inherit;
 }
-.auth-input:focus{border-color:#1a6fc4}
+.auth-input:focus{border-color:#6366f1}
 .auth-btn{
-  width:100%;padding:12px;background:#1a6fc4;color:#fff;border:none;
+  width:100%;padding:12px;background:#6366f1;color:#fff;border:none;
   border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;
   margin-bottom:8px;font-family:inherit;transition:background .2s;
 }
-.auth-btn:hover{background:#155da0}
+.auth-btn:hover{background:#4f46e5}
 .auth-btn.purple{background:#7c3aed}
 .auth-btn.purple:hover{background:#6d28d9}
 .auth-link-btn{
@@ -346,7 +361,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .pin-dots{display:flex;gap:12px;justify-content:center;margin:16px 0}
 .pin-dot{width:13px;height:13px;border-radius:50%;background:#e5e7eb;
   border:2px solid #d1d5db;transition:all .15s}
-.pin-dot.filled{background:#1a6fc4;border-color:#1a6fc4;transform:scale(1.1)}
+.pin-dot.filled{background:#6366f1;border-color:#6366f1;transform:scale(1.1)}
 .pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
 .pin-key{
   padding:13px 8px;background:#f9fafb;border:1.5px solid #e5e7eb;
@@ -364,47 +379,34 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .user-name{font-size:12px;font-weight:600;color:#fff;max-width:110px;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 </style>
-<script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
 
 <!-- AUTH OVERLAY -->
 <div id="auth-overlay">
   <div class="auth-card">
-    <!-- S1: Google Login -->
-    <div id="auth-s1" class="auth-screen active">
+    <!-- S2: Profile -->
+    <div id="auth-s2" class="auth-screen active">
       <div class="auth-logo">🏢</div>
       <div class="auth-title">Property Manager</div>
-      <div class="auth-sub">ระบบจัดการอสังหาริมทรัพย์<br>ล็อกอินด้วย Google เพื่อเริ่มใช้งาน</div>
-      <div id="g_id_signin" style="display:flex;justify-content:center;min-height:44px"></div>
-      <div class="auth-loading" id="auth-loading">กำลังโหลด...</div>
-    </div>
-    <!-- S2: Profile -->
-    <div id="auth-s2" class="auth-screen">
-      <div class="auth-logo">👤</div>
-      <div class="auth-title">เลือก Profile</div>
-      <div class="auth-user-badge" id="auth-badge">
-        <img id="badge-avatar" src="" alt=""><span id="badge-name"></span>
-      </div>
+      <div class="auth-sub" style="margin-bottom:12px">เลือกหรือพิมพ์ชื่อ profile</div>
       <!-- รายชื่อ profiles -->
-      <div id="pm-profile-list-auth" style="width:100%;display:flex;flex-direction:column;gap:8px;max-height:220px;overflow-y:auto"></div>
+      <div id="pm-profile-list-auth" style="width:100%;display:flex;flex-direction:column;gap:8px;max-height:200px;overflow-y:auto"></div>
       <div id="pm-no-profile-msg" style="display:none;font-size:13px;color:#9ca3af;text-align:center;padding:6px 0">ยังไม่มี profile — สร้างใหม่เลย</div>
       <div class="auth-err" id="profile-err"></div>
-      <!-- พิมพ์ชื่อ profile (สำหรับเครื่องใหม่ / แชร์กับคนอื่น) -->
-      <div style="width:100%;margin-top:4px">
+      <div style="width:100%;margin-top:8px">
         <div style="font-size:11px;color:#9ca3af;text-align:center;margin-bottom:6px">หรือพิมพ์ชื่อ profile ที่รู้จัก</div>
         <div style="display:flex;gap:8px;width:100%">
           <input type="text" id="profile-input" autocomplete="off" spellcheck="false"
-            placeholder="ชื่อ profile เช่น zaataan"
-            style="flex:1;padding:10px 12px;border:2px solid #e5e7eb;border-radius:10px;font-size:14px;outline:none;color:#1f2937"
-            onfocus="this.style.borderColor='#3b82f6'"
-            onblur="this.style.borderColor='#e5e7eb'">
-          <button onclick="submitProfile()" style="padding:10px 14px;background:#3b82f6;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap">เข้า</button>
+            placeholder="พิมพ์ชื่อ profile"
+            style="flex:1;padding:10px 12px;border:2px solid #e2e8f0;border-radius:10px;font-size:14px;outline:none;color:#1e293b"
+            onfocus="this.style.borderColor='#6366f1'"
+            onblur="this.style.borderColor='#e2e8f0'">
+          <button onclick="submitProfile()" style="padding:10px 14px;background:#6366f1;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap">เข้า</button>
         </div>
       </div>
       <div class="auth-divider">หรือ</div>
       <button class="auth-btn purple" onclick="showAuthScreen('create')">+ สร้าง Profile ใหม่</button>
-      <button class="auth-link-btn" onclick="pmSignOut()" style="margin-top:8px">ออกจาก Google</button>
     </div>
     <!-- S3: PIN -->
     <div id="auth-s3" class="auth-screen">
@@ -414,6 +416,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       <div class="pin-dots" id="pin-dots">
         <span class="pin-dot" id="pd0"></span><span class="pin-dot" id="pd1"></span>
         <span class="pin-dot" id="pd2"></span><span class="pin-dot" id="pd3"></span>
+        <span class="pin-dot" id="pd4"></span><span class="pin-dot" id="pd5"></span>
       </div>
       <div class="pin-pad" id="pin-pad"></div>
       <div class="auth-err" id="pin-err"></div>
@@ -425,11 +428,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       <div class="auth-title">สร้าง Profile ใหม่</div>
       <div class="auth-sub">ข้อมูลแต่ละ profile แยกกันทั้งหมด</div>
       <input type="text" id="create-name" class="auth-input"
-        placeholder="ชื่อ profile เช่น zaataan" autocomplete="off" spellcheck="false">
+        placeholder="ชื่อ profile" autocomplete="off" spellcheck="false">
       <input type="password" id="create-pin1" class="auth-input"
-        placeholder="ตั้ง PIN 4 หลัก" maxlength="4" inputmode="numeric" pattern="[0-9]*">
+        placeholder="ตั้ง PIN 6 หลัก" maxlength="6" inputmode="numeric" pattern="[0-9]*">
       <input type="password" id="create-pin2" class="auth-input"
-        placeholder="ยืนยัน PIN" maxlength="4" inputmode="numeric" pattern="[0-9]*">
+        placeholder="ยืนยัน PIN" maxlength="6" inputmode="numeric" pattern="[0-9]*">
       <button class="auth-btn purple" onclick="createProfile()">สร้าง Profile</button>
       <div class="auth-err" id="create-err"></div>
       <button class="auth-link-btn" onclick="showAuthScreen('profile')" style="margin-top:8px">← กลับ</button>
@@ -462,7 +465,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       <div style="padding:6px 8px 4px 12px;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;margin-top:4px">Profiles</div>
       <div id="pm-profile-list" style="padding:4px 6px"></div>
       <div style="border-top:1px solid #f3f4f6;padding:6px">
-        <button onclick="document.getElementById('pm-profile-dropdown').style.display='none';load()" style="width:100%;text-align:left;padding:8px 12px;border:none;background:none;color:#3b82f6;font-size:13px;cursor:pointer;border-radius:8px">🔄 โหลดข้อมูลจาก Sheets</button>
+        <button onclick="document.getElementById('pm-profile-dropdown').style.display='none';load()" style="width:100%;text-align:left;padding:8px 12px;border:none;background:none;color:#6366f1;font-size:13px;cursor:pointer;border-radius:8px">🔄 โหลดข้อมูลจาก Sheets</button>
         <button onclick="pmDeleteProfile()" style="width:100%;text-align:left;padding:8px 12px;border:none;background:none;color:#dc2626;font-size:13px;cursor:pointer;border-radius:8px">🗑 ลบ profile นี้</button>
         <button onclick="pmSignOut()" style="width:100%;text-align:left;padding:8px 12px;border:none;background:none;color:#6b7280;font-size:13px;cursor:pointer;border-radius:8px">↩ ออกจาก Google</button>
       </div>
@@ -476,15 +479,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 
 <!-- SIDEBAR -->
 <nav class="sidebar" id="sidebar">
-  <div class="nav-group-label">เมนู</div>
+  <div class="sidebar-brand">เมนูหลัก</div>
   <div class="nav-item active" data-page="overview" onclick="navTo('overview',this)">
     <span class="ni-icon">📊</span>ภาพรวม
   </div>
-  <div class="nav-item" data-page="rooms" onclick="navTo('rooms',this)">
-    <span class="ni-icon">🛏</span>จัดการห้อง
-  </div>
   <div class="nav-item" data-page="pool" onclick="navTo('pool',this)">
     <span class="ni-icon">🏦</span>กองกลาง
+  </div>
+  <div class="nav-sep"></div>
+  <div class="nav-item" data-page="rooms" onclick="navTo('rooms',this)">
+    <span class="ni-icon">🛏</span>จัดการห้อง
   </div>
   <div class="nav-item" data-page="cashflow" onclick="navTo('cashflow',this)">
     <span class="ni-icon">💰</span>Cash Flow
@@ -1003,22 +1007,22 @@ function renderOverview() {
   const el = document.getElementById('overview-content');
   el.innerHTML = `
     <div class="kpi-row">
-      <div class="kpi">
+      <div class="kpi accent-green">
         <div class="label">รายได้เช่า/เดือน</div>
         <div class="number" style="color:var(--green)">${totalRent>0?fmt(totalRent):'—'}</div>
         <div class="sub">${rentedCount}/${rooms.length} ห้องเช่าอยู่</div>
       </div>
-      <div class="kpi">
+      <div class="kpi accent-amber">
         <div class="label">ผ่อนแบงค์รวม</div>
         <div class="number" style="color:var(--amber)">${fmt(totalMort)}</div>
         <div class="sub">บาท/เดือน</div>
       </div>
-      <div class="kpi">
+      <div class="kpi accent-blue">
         <div class="label">Net Cash Flow</div>
         <div class="number" style="color:${totalNet>=0?'var(--green)':'var(--red)'}">${(totalNet>=0?'+':'')+fmt(totalNet)}</div>
         <div class="sub">บาท/เดือน</div>
       </div>
-      ${totalDeposit>0?`<div class="kpi"><div class="label">มัดจำรวม</div><div class="number" style="color:var(--teal)">${fmt(totalDeposit)}</div><div class="sub">บาท</div></div>`:''}
+      ${totalDeposit>0?`<div class="kpi accent-teal"><div class="label">มัดจำรวม</div><div class="number" style="color:var(--teal)">${fmt(totalDeposit)}</div><div class="sub">บาท</div></div>`:''}
     </div>
     <div class="card">
       <div style="font-size:13px;font-weight:600;margin-bottom:8px;color:#6b7280">อัตราการเช่า (Occupancy) ${occ}%</div>
@@ -1324,13 +1328,13 @@ function renderPool() {
   const el = document.getElementById('pool-content');
   el.innerHTML = `
     <div class="kpi-row">
-      <div class="kpi"><div class="label">ยอดรวมเข้า</div>
+      <div class="kpi accent-green"><div class="label">ยอดรวมเข้า</div>
         <div class="number" style="color:var(--green)">${fmt(incTotal)}</div><div class="sub">บาท</div></div>
-      <div class="kpi"><div class="label">ยอดรวมออก</div>
+      <div class="kpi accent-amber"><div class="label">ยอดรวมออก</div>
         <div class="number" style="color:var(--red)">${fmt(expTotal)}</div><div class="sub">บาท</div></div>
-      <div class="kpi"><div class="label">ยอดคงเหลือ</div>
+      <div class="kpi accent-teal"><div class="label">ยอดคงเหลือ</div>
         <div class="number" style="color:${balance>=0?'var(--teal)':'var(--red)'}">${(balance>=0?'+':'')+fmt(balance)}</div><div class="sub">บาท</div></div>
-      ${loanTotal>0?`<div class="kpi"><div class="label">หนี้ภายนอกรวม</div><div class="number" style="color:var(--amber)">${fmt(loanTotal)}</div><div class="sub">บาท</div></div>`:''}
+      ${loanTotal>0?`<div class="kpi accent-blue"><div class="label">หนี้ภายนอกรวม</div><div class="number" style="color:var(--amber)">${fmt(loanTotal)}</div><div class="sub">บาท</div></div>`:''}
     </div>
     <div class="card">
       <div class="card-title">💚 รายรับกองกลาง</div>
@@ -1678,13 +1682,8 @@ const PM_PROFILES_KEY= 'pm_profiles';
 const PM_SESSION_KEY = 'pm_session';
 const PM_UNLOCKS_KEY = 'pm_pin_unlocks'; // cache PIN unlock ต่อ profile (24 ชม.)
 
-let _pmGUser   = null;
 let _pmProfile = null;
 let _pmPinBuf  = '';
-
-function pmParseJwt(t) {
-  try { return JSON.parse(atob(t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))); } catch(e){ return null; }
-}
 function getPMProfiles() {
   try { return JSON.parse(localStorage.getItem(PM_PROFILES_KEY)||'{}'); } catch(e){ return {}; }
 }
@@ -1697,7 +1696,7 @@ function pmProfileKey() { return 'propmanager_v1_' + (_pmProfile||'default'); }
 function pmProfilePath() { return SHEETS_PATH + '_' + (_pmProfile||'default'); }
 
 function showAuthScreen(name) {
-  const map = {login:'auth-s1', profile:'auth-s2', pin:'auth-s3', create:'auth-s4'};
+  const map = {profile:'auth-s2', pin:'auth-s3', create:'auth-s4'};
   document.querySelectorAll('.auth-screen').forEach(s => s.classList.remove('active'));
   const el = document.getElementById(map[name]);
   if(el) el.classList.add('active');
@@ -1712,20 +1711,6 @@ function showAuthScreen(name) {
     document.getElementById('create-err').style.display = 'none';
     setTimeout(()=>document.getElementById('create-name').focus(),150);
   }
-}
-
-function onPMGoogleSignIn(response) {
-  const payload = pmParseJwt(response.credential);
-  if(!payload) return;
-  _pmGUser = { email: payload.email, name: payload.name, picture: payload.picture };
-  try { localStorage.setItem('pm_guser', JSON.stringify(_pmGUser)); } catch(e){}
-  goPMProfileScreen();
-}
-
-function goPMProfileScreen() {
-  document.getElementById('badge-name').textContent = _pmGUser.name || _pmGUser.email;
-  if(_pmGUser.picture) document.getElementById('badge-avatar').src = _pmGUser.picture;
-  showAuthScreen('profile');
 }
 
 function renderPMProfileListAuth() {
@@ -1745,11 +1730,11 @@ function renderPMProfileListAuth() {
                padding:11px 14px;border:2px solid #e5e7eb;border-radius:12px;
                background:#fff;cursor:pointer;font-size:14px;font-weight:600;
                color:#1f2937;text-align:left"
-        onmouseover="this.style.borderColor='#3b82f6';this.style.background='#eff6ff'"
-        onmouseout="this.style.borderColor='#e5e7eb';this.style.background='#fff'">
-        <span style="width:36px;height:36px;border-radius:50%;background:#dbeafe;
+        onmouseover="this.style.borderColor='#6366f1';this.style.background='#eef2ff'"
+        onmouseout="this.style.borderColor='#e2e8f0';this.style.background='#fff'">
+        <span style="width:36px;height:36px;border-radius:50%;background:#eef2ff;
                      display:flex;align-items:center;justify-content:center;
-                     font-size:15px;font-weight:800;color:#1d4ed8;flex-shrink:0">
+                     font-size:15px;font-weight:800;color:#6366f1;flex-shrink:0">
           ${name[0].toUpperCase()}
         </span>
         <span>${name}</span>
@@ -1833,7 +1818,7 @@ function createProfile() {
   const errEl = document.getElementById('create-err');
   if(!name)                       { errEl.textContent='กรุณาใส่ชื่อ profile';          errEl.style.display='block'; return; }
   if(!/^[a-z0-9_]+$/.test(name)) { errEl.textContent='ใช้ได้แค่ a-z 0-9 _';          errEl.style.display='block'; return; }
-  if(!/^\d{4}$/.test(p1))       { errEl.textContent='PIN ต้องเป็นตัวเลข 4 หลัก';   errEl.style.display='block'; return; }
+  if(!/^\d{6}$/.test(p1))       { errEl.textContent='PIN ต้องเป็นตัวเลข 6 หลัก';   errEl.style.display='block'; return; }
   if(p1 !== p2)                   { errEl.textContent='PIN ทั้งสองไม่ตรงกัน';         errEl.style.display='block'; return; }
   const profiles = getPMProfiles();
   if(profiles[name]) { errEl.textContent='มี profile "'+name+'" อยู่แล้ว'; errEl.style.display='block'; return; }
@@ -1855,16 +1840,16 @@ function buildPinPad() {
   }).join('');
 }
 function updatePinDots() {
-  [0,1,2,3].forEach(i => {
+  [0,1,2,3,4,5].forEach(i => {
     const el = document.getElementById('pd'+i);
     if(el) el.className = 'pin-dot' + (i < _pmPinBuf.length ? ' filled' : '');
   });
 }
 function pinKey(k) {
   if(k==='del') { _pmPinBuf = _pmPinBuf.slice(0,-1); updatePinDots(); return; }
-  if(_pmPinBuf.length >= 4) return;
+  if(_pmPinBuf.length >= 6) return;
   _pmPinBuf += k; updatePinDots();
-  if(_pmPinBuf.length === 4) setTimeout(pmVerifyPin, 150);
+  if(_pmPinBuf.length === 6) setTimeout(pmVerifyPin, 150);
 }
 function pmVerifyPin() {
   const profiles = getPMProfiles();
@@ -1882,7 +1867,7 @@ function pmVerifyPin() {
 function savePMSession() {
   try {
     localStorage.setItem(PM_SESSION_KEY, JSON.stringify({
-      googleUser: _pmGUser, profile: _pmProfile,
+      profile: _pmProfile,
       expires: Date.now() + 7*24*60*60*1000
     }));
   } catch(e){}
@@ -1891,10 +1876,8 @@ function savePMSession() {
 function pmLaunchApp() {
   window.ACTIVE_PROFILE = _pmProfile;
   document.getElementById('auth-overlay').style.display   = 'none';
-  document.getElementById('pm-user-pill').style.display      = 'flex';
   document.getElementById('pm-profile-area').style.display   = 'flex';
   document.getElementById('pm-profile-chip-name').textContent = _pmProfile;
-  if(_pmGUser?.picture) document.getElementById('pm-user-avatar').src = _pmGUser.picture;
   load();
   renderPropSelector();
   if(app.currentId && app.props.find(p=>p.id===app.currentId)) {
@@ -1948,8 +1931,8 @@ function togglePMDropdown() {
       const isUnlocked = isPMUnlocked(name);
       return `<button onclick="pmSwitchToProfile('${name}')"
         style="width:100%;text-align:left;padding:9px 12px;border:none;
-               background:${isActive?'#eff6ff':'none'};
-               color:${isActive?'#1d4ed8':'#1f2937'};
+               background:${isActive?'#eef2ff':'none'};
+               color:${isActive?'#4f46e5':'#1e293b'};
                font-size:13px;font-weight:${isActive?'700':'500'};
                cursor:pointer;border-radius:8px;display:flex;align-items:center;gap:8px">
         <span style="width:14px">${isActive?'✓':''}</span>
@@ -1992,51 +1975,19 @@ function pmLogoutProfile() {
   try { localStorage.removeItem(PM_SESSION_KEY); } catch(e){}
   location.reload();
 }
-function pmSignOut() {
-  // ออกจาก Google ด้วย
-  if(!confirm('ออกจาก Google ด้วยใช่มั้ย?')) return;
-  try { localStorage.removeItem(PM_SESSION_KEY); localStorage.removeItem('pm_guser'); } catch(e){}
-  location.reload();
-}
-
 // ── Init ──
 window.addEventListener('DOMContentLoaded', () => {
-  // profile-input Enter key
   document.getElementById('profile-input')?.addEventListener('keydown', e => {
     if(e.key==='Enter') submitProfile();
   });
-  // Check session
   try {
     const sess = JSON.parse(localStorage.getItem(PM_SESSION_KEY)||'{}');
-    if(sess.profile && sess.googleUser && sess.expires > Date.now()) {
-      _pmGUser = sess.googleUser; _pmProfile = sess.profile;
+    if(sess.profile && sess.expires > Date.now()) {
+      _pmProfile = sess.profile;
       pmLaunchApp(); return;
     }
   } catch(e){}
-  try {
-    const gu = JSON.parse(localStorage.getItem('pm_guser')||'{}');
-    if(gu.email) { _pmGUser = gu; goPMProfileScreen(); return; }
-  } catch(e){}
-  let _gisRetry = 0;
-  function tryGIS() {
-    if(typeof google !== 'undefined' && google.accounts) {
-      document.getElementById('auth-loading').style.display = 'none';
-      try {
-        google.accounts.id.initialize({ client_id: PM_CLIENT_ID, callback: onPMGoogleSignIn });
-        google.accounts.id.renderButton(document.getElementById('g_id_signin'),
-          { theme:'outline', size:'large', width:270, locale:'th' });
-      } catch(err) {
-        document.getElementById('auth-loading').innerHTML =
-          '⚠️ โหลด Google Sign-In ไม่ได้<br><button onclick="location.reload()" style="margin-top:10px;padding:8px 18px;border-radius:8px;border:none;background:#3b82f6;color:#fff;cursor:pointer;font-size:14px">🔄 ลองใหม่</button>';
-      }
-    } else if(_gisRetry++ < 50) {
-      setTimeout(tryGIS, 300); // รอได้สูงสุด ~15 วิ
-    } else {
-      document.getElementById('auth-loading').innerHTML =
-        '⚠️ โหลด Google Sign-In ไม่ได้<br><small style="color:#9ca3af">ลองตรวจสอบการเชื่อมต่ออินเทอร์เน็ต</small><br><button onclick="location.reload()" style="margin-top:10px;padding:8px 18px;border-radius:8px;border:none;background:#3b82f6;color:#fff;cursor:pointer;font-size:14px">🔄 ลองใหม่</button>';
-    }
-  }
-  tryGIS();
+  showAuthScreen('profile');
 });
 
 /* ═══════════════════════════════════════════════════════
