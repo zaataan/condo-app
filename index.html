@@ -367,6 +367,7 @@
       <div class="app-icon-lg" id="app-logo" onclick="logoTap()">🏠</div>
       <h1>Condo Manager</h1>
       <p>ระบบจัดการอสังหาริมทรัพย์</p>
+      <p id="sync-badge" style="font-size:11px;margin-top:6px;color:#888;min-height:16px"></p>
     </div>
 
     <!-- S2: Profile -->
@@ -568,12 +569,56 @@
 </div>
 
 <script>
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz7rnVZdNS_kRn5FABOuSeh9b3KgtdWaJOZHXxVF-p7dsncEn0XS_OUjtSQWWTKHJEx/exec';
 const CONDO_PROFILES_KEY = 'condo_profiles';
 const CONDO_SESSION_KEY  = 'condo_session';
 const CONDO_UNLOCKS_KEY  = 'condo_unlocks';
 const SESSION_TTL = 7 * 24 * 60 * 60 * 1000;
 const UNLOCK_TTL  = 24 * 60 * 60 * 1000;
 const ADMIN_PROFILES = ['zaataan'];
+
+/* ── SHA-256 (ไม่เก็บ PIN ตรงๆ) ── */
+async function sha256(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+/* ── Cloud Sync (Google Sheets via Apps Script) ── */
+async function syncToCloud(profiles) {
+  if(!SCRIPT_URL) return;
+  try {
+    fetch(SCRIPT_URL, {
+      method:'POST', mode:'no-cors',
+      body: JSON.stringify({ path:'profiles', data: profiles })
+    });
+  } catch(e) {}
+}
+
+async function loadFromCloud() {
+  if(!SCRIPT_URL) return null;
+  try {
+    setSyncBadge('syncing');
+    const res  = await fetch(SCRIPT_URL + '?path=profiles');
+    const json = await res.json();
+    const cloud = (json && json.data) ? json.data : null;
+    if(cloud && Object.keys(cloud).length > 0) {
+      saveProfiles(cloud);
+      setSyncBadge('ok');
+      return cloud;
+    }
+    setSyncBadge('ok');
+  } catch(e) { setSyncBadge('offline'); }
+  return null;
+}
+
+function setSyncBadge(state) {
+  const el = document.getElementById('sync-badge');
+  if(!el) return;
+  const map = { syncing:['🔄','กำลังซิงค์...','#888'], ok:['☁️','ซิงค์แล้ว','#34c759'], offline:['📵','offline','#ff3b30'] };
+  const [icon, txt, color] = map[state] || map.ok;
+  el.textContent = `${icon} ${txt}`;
+  el.style.color = color;
+}
 
 let _profile = null, _pinBuf = '';
 
@@ -635,18 +680,37 @@ function pinKey(k) {
   if(_pinBuf.length===6) verifyPin();
 }
 function pinDel() { _pinBuf=_pinBuf.slice(0,-1); updatePinDots(); }
-function verifyPin() {
+async function verifyPin() {
   const profiles = getProfiles();
-  if(profiles[_profile]?.pin === _pinBuf) {
+  const profile  = profiles[_profile];
+  if(!profile) { showPinError(); return; }
+
+  let match = false;
+  if(profile.hashedPin) {
+    match = (await sha256(_pinBuf)) === profile.hashedPin;
+  } else if(profile.pin) {
+    // migration: plain PIN → hash แล้ว sync ขึ้น cloud
+    match = profile.pin === _pinBuf;
+    if(match) {
+      profile.hashedPin = await sha256(_pinBuf);
+      delete profile.pin;
+      profiles[_profile] = profile;
+      saveProfiles(profiles);
+      syncToCloud(profiles);
+    }
+  }
+
+  if(match) {
     const u=getUnlocks(); u[_profile]={expires:Date.now()+UNLOCK_TTL}; saveUnlocks(u);
     launchApp();
-  } else {
-    document.getElementById('pin-err').style.display='block';
-    setTimeout(()=>{ _pinBuf=''; updatePinDots(); document.getElementById('pin-err').style.display='none'; }, 900);
-  }
+  } else { showPinError(); }
+}
+function showPinError() {
+  document.getElementById('pin-err').style.display='block';
+  setTimeout(()=>{ _pinBuf=''; updatePinDots(); document.getElementById('pin-err').style.display='none'; }, 900);
 }
 
-function createProfile() {
+async function createProfile() {
   const name = document.getElementById('create-name').value.trim();
   const pin1 = document.getElementById('create-pin1').value.trim();
   const pin2 = document.getElementById('create-pin2').value.trim();
@@ -656,10 +720,12 @@ function createProfile() {
   if(!/^\d{6}$/.test(pin1))   { err.textContent='PIN ต้องเป็นตัวเลข 6 หลัก'; err.style.display='block'; return; }
   if(pin1!==pin2)              { err.textContent='PIN ไม่ตรงกัน';            err.style.display='block'; return; }
   const profiles = getProfiles();
-  // ถ้า profile มีอยู่แล้วและมี PIN → error (แต่ถ้าไม่มี PIN = reset mode → อนุญาต)
-  if(profiles[name] && profiles[name].pin) { err.textContent='ชื่อ profile นี้มีอยู่แล้ว'; err.style.display='block'; return; }
+  if(profiles[name] && profiles[name].hashedPin) { err.textContent='ชื่อ profile นี้มีอยู่แล้ว'; err.style.display='block'; return; }
   profiles[name] = profiles[name] || {};
-  profiles[name].pin = pin1; saveProfiles(profiles);
+  profiles[name].hashedPin = await sha256(pin1);
+  delete profiles[name].pin;
+  saveProfiles(profiles);
+  syncToCloud(profiles);
   _profile = name;
   const u=getUnlocks(); u[name]={expires:Date.now()+UNLOCK_TTL}; saveUnlocks(u);
   launchApp();
@@ -711,15 +777,20 @@ function switchProfile(name) {
   document.getElementById('auth-overlay').style.display = 'flex';
   document.getElementById('app-content').style.display  = 'none';
 }
-function deleteProfile() {
+async function deleteProfile() {
   document.getElementById('chip-dd').classList.remove('open');
   if(!_profile) return;
   if(!confirm(`ลบ profile "${_profile}"?\nPIN จะหายถาวร`)) return;
   const pin = prompt(`🔐 ใส่ PIN ของ "${_profile}" เพื่อยืนยัน`);
   if(pin===null) return;
   const profiles = getProfiles();
-  if(profiles[_profile]?.pin !== pin.trim()) { alert('❌ PIN ไม่ถูกต้อง'); return; }
+  const profile  = profiles[_profile];
+  let ok = false;
+  if(profile?.hashedPin) ok = (await sha256(pin.trim())) === profile.hashedPin;
+  else if(profile?.pin)  ok = profile.pin === pin.trim();
+  if(!ok) { alert('❌ PIN ไม่ถูกต้อง'); return; }
   delete profiles[_profile]; saveProfiles(profiles);
+  syncToCloud(profiles);
   const u=getUnlocks(); delete u[_profile]; saveUnlocks(u);
   logoutIndex();
 }
@@ -759,41 +830,41 @@ function closeChangePinModal() {
 function cpBgClick(e) {
   if(e.target === document.getElementById('changepin-modal')) closeChangePinModal();
 }
-function submitChangePin() {
-  const oldPin = document.getElementById('cp-old').value.trim();
+async function submitChangePin() {
+  const oldPin  = document.getElementById('cp-old').value.trim();
   const newPin1 = document.getElementById('cp-new1').value.trim();
   const newPin2 = document.getElementById('cp-new2').value.trim();
   const err = document.getElementById('cp-err');
   err.style.display = 'none';
 
   const profiles = getProfiles();
-  if(profiles[_profile]?.pin !== oldPin) {
+  const profile  = profiles[_profile];
+
+  // ตรวจ PIN เดิม (รองรับทั้ง hashed และ plain migration)
+  let oldOk = false;
+  if(profile?.hashedPin) {
+    oldOk = (await sha256(oldPin)) === profile.hashedPin;
+  } else if(profile?.pin) {
+    oldOk = profile.pin === oldPin;
+  }
+  if(!oldOk) {
     err.textContent = '❌ PIN ปัจจุบันไม่ถูกต้อง';
     err.style.display = 'block';
     document.getElementById('cp-old').value = '';
     document.getElementById('cp-old').focus();
     return;
   }
-  if(!/^\d{6}$/.test(newPin1)) {
-    err.textContent = 'PIN ใหม่ต้องเป็นตัวเลข 6 หลัก';
-    err.style.display = 'block'; return;
-  }
-  if(newPin1 !== newPin2) {
-    err.textContent = 'PIN ใหม่ไม่ตรงกัน';
-    err.style.display = 'block'; return;
-  }
-  if(newPin1 === oldPin) {
-    err.textContent = 'PIN ใหม่ต้องแตกต่างจาก PIN เดิม';
-    err.style.display = 'block'; return;
-  }
+  if(!/^\d{6}$/.test(newPin1)) { err.textContent='PIN ใหม่ต้องเป็นตัวเลข 6 หลัก'; err.style.display='block'; return; }
+  if(newPin1 !== newPin2)       { err.textContent='PIN ใหม่ไม่ตรงกัน';            err.style.display='block'; return; }
+  if(newPin1 === oldPin)        { err.textContent='PIN ใหม่ต้องแตกต่างจาก PIN เดิม'; err.style.display='block'; return; }
 
-  profiles[_profile].pin = newPin1;
+  profile.hashedPin = await sha256(newPin1);
+  delete profile.pin;
+  profiles[_profile] = profile;
   saveProfiles(profiles);
-  // clear unlock cache → ต้องใส่ PIN ใหม่ครั้งถัดไป
+  syncToCloud(profiles);
   const u = getUnlocks(); delete u[_profile]; saveUnlocks(u);
   closeChangePinModal();
-
-  // แสดง success toast
   showToast('✅ เปลี่ยน PIN เรียบร้อย');
 }
 
@@ -920,7 +991,7 @@ function cancelResetPin() {
   document.getElementById('ap-reset-form-wrap').style.display = 'none';
 }
 
-function confirmResetPin() {
+async function confirmResetPin() {
   if(!_apTarget) return;
   const pin1 = document.getElementById('ap-new-pin1').value.trim();
   const pin2 = document.getElementById('ap-new-pin2').value.trim();
@@ -931,24 +1002,28 @@ function confirmResetPin() {
   const profiles = getProfiles();
   if(!profiles[_apTarget]) { err.textContent='ไม่พบ profile นี้'; err.style.display='block'; return; }
   const targetName = _apTarget;
-  profiles[targetName].pin = pin1;
+  profiles[targetName].hashedPin = await sha256(pin1);
+  delete profiles[targetName].pin;
   saveProfiles(profiles);
-  // clear unlock cache so they must re-enter new PIN next time
+  syncToCloud(profiles);
   const u = getUnlocks(); delete u[targetName]; saveUnlocks(u);
   cancelResetPin();
   renderAdminList();
   showToast(`✅ Reset PIN ของ "${targetName}" เรียบร้อย`);
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('profile-input')?.addEventListener('keydown', e=>{
     if(e.key==='Enter') submitProfile();
   });
+  // ตรวจ session ก่อน — ถ้ายังอยู่ ข้าม cloud load
   try {
     const s = JSON.parse(localStorage.getItem(CONDO_SESSION_KEY)||'{}');
     if(s.profile && s.expires>Date.now()) { _profile=s.profile; launchApp(); return; }
   } catch(e) {}
+  // โหลด profiles จาก cloud (sync ข้าม device)
   showAuthScreen('profile');
+  await loadFromCloud();
 });
 </script>
 </body>
