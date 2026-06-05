@@ -91,6 +91,8 @@
       display:flex;align-items:center;justify-content:center;
       transition:background .1s;
       font-family:inherit;
+      touch-action:manipulation;
+      -webkit-user-select:none;user-select:none;
     }
     .pin-key:active{background:rgba(0,0,0,.18)}
     .pin-key.del,.pin-key.cancel{font-size:15px;color:var(--text2);font-weight:500;background:transparent}
