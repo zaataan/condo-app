@@ -372,14 +372,22 @@
 
     <!-- S2: Profile -->
     <div id="auth-s2" class="auth-screen active">
-      <div class="auth-field">
-        <label>ชื่อ Profile</label>
-        <input id="profile-input" class="auth-input" type="text"
-               placeholder="พิมพ์ชื่อ profile" autocomplete="off" autocapitalize="off"
-               onkeydown="if(event.key==='Enter')submitProfile()">
+      <!-- Loading state -->
+      <div id="cloud-loading" style="text-align:center;padding:12px 0 20px">
+        <div style="font-size:28px;margin-bottom:8px">🔄</div>
+        <div style="font-size:14px;color:var(--text2)">กำลังโหลด profiles...</div>
       </div>
-      <button class="auth-btn" onclick="submitProfile()">ถัดไป</button>
-      <div class="auth-link" onclick="showAuthScreen('create')">ยังไม่มี profile? สร้างใหม่</div>
+      <!-- Profile input (ซ่อนก่อน รอ cloud) -->
+      <div id="profile-form" style="display:none">
+        <div class="auth-field">
+          <label>ชื่อ Profile</label>
+          <input id="profile-input" class="auth-input" type="text"
+                 placeholder="พิมพ์ชื่อ profile" autocomplete="off" autocapitalize="off"
+                 onkeydown="if(event.key==='Enter')submitProfile()">
+        </div>
+        <button class="auth-btn" onclick="submitProfile()">ถัดไป</button>
+        <div class="auth-link" onclick="showAuthScreen('create')">ยังไม่มี profile? สร้างใหม่</div>
+      </div>
     </div>
 
     <!-- S3: PIN -->
@@ -634,7 +642,18 @@ function showAuthScreen(name) {
   document.querySelectorAll('.auth-screen').forEach(el=>el.classList.remove('active'));
   const map = {profile:'auth-s2',pin:'auth-s3',create:'auth-s4'};
   document.getElementById(map[name])?.classList.add('active');
-  if(name==='profile') { const inp=document.getElementById('profile-input'); inp.value=''; setTimeout(()=>inp.focus(),80); }
+  if(name==='profile') {
+    // ถ้ามี profiles อยู่แล้ว (local หรือ cloud โหลดแล้ว) → แสดง form เลย
+    const hasCached = Object.keys(getProfiles()).length > 0;
+    if(hasCached) {
+      document.getElementById('cloud-loading').style.display = 'none';
+      document.getElementById('profile-form').style.display  = 'block';
+    } else {
+      document.getElementById('cloud-loading').style.display = 'block';
+      document.getElementById('profile-form').style.display  = 'none';
+    }
+    const inp = document.getElementById('profile-input'); inp.value=''; setTimeout(()=>inp.focus(),80);
+  }
   if(name==='create')  { document.getElementById('create-name').readOnly = false; }
   if(name==='pin')     {
     _pinBuf=''; buildPinPad(); updatePinDots();
@@ -1012,18 +1031,26 @@ async function confirmResetPin() {
   showToast(`✅ Reset PIN ของ "${targetName}" เรียบร้อย`);
 }
 
+function showProfileForm() {
+  document.getElementById('cloud-loading').style.display = 'none';
+  document.getElementById('profile-form').style.display  = 'block';
+  setTimeout(() => document.getElementById('profile-input')?.focus(), 80);
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
-  document.getElementById('profile-input')?.addEventListener('keydown', e=>{
-    if(e.key==='Enter') submitProfile();
-  });
   // ตรวจ session ก่อน — ถ้ายังอยู่ ข้าม cloud load
   try {
     const s = JSON.parse(localStorage.getItem(CONDO_SESSION_KEY)||'{}');
     if(s.profile && s.expires>Date.now()) { _profile=s.profile; launchApp(); return; }
   } catch(e) {}
-  // โหลด profiles จาก cloud (sync ข้าม device)
+
   showAuthScreen('profile');
-  await loadFromCloud();
+
+  // โหลด cloud — timeout 6 วิ ถ้าช้าเกินใช้ local แทน
+  const timeout = new Promise(r => setTimeout(() => r('timeout'), 6000));
+  await Promise.race([loadFromCloud(), timeout]);
+
+  showProfileForm();
 });
 </script>
 </body>
